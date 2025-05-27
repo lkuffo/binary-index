@@ -24,7 +24,7 @@ enum JaccardKernel {
     JACCARD_U64X4_C,
     JACCARD_B256_VPSHUFB_SAD,
     JACCARD_B256_VPOPCNTQ,
-    JACCARD_B256_VPOPCNTQ_PDX
+    JACCARD_B256_VPOPCNTQ_PDX,
     // 1024
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
@@ -65,8 +65,8 @@ void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
             __m256i intersection = _mm256_popcnt_epi64(_mm256_and_epi64(first, second));
             __m256i union_ = _mm256_popcnt_epi64(_mm256_or_epi64(first, second));
-            intersections_result[i] = _mm256_add_epi8(intersections_result[i], and_count_vec);
-            unions_result[i] = _mm256_add_epi8(unions_result[i], or_count_vec);
+            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
+            unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
             second_vector += 32; // 256x8-bit values (8 registers of 256 bits at a time)
         }
     }
