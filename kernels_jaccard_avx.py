@@ -181,7 +181,7 @@ float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 
-void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 //
 // 1024 region
