@@ -168,7 +168,7 @@ enum JaccardKernel {
     // 1536
     JACCARD_U64X24_C,
     JACCARD_B1536_VPOPCNTQ,
-    JACCARD_B1536_VPOPCNTQ_3CSA,
+    JACCARD_B1536_VPOPCNTQ_3CSA
 };
 
 //
@@ -337,19 +337,19 @@ def main(
     kernels_cpp_256d = [
         # C++:
         (
-            "jaccard_u64x4_c",
+            'JACCARD_U64X4_C',
             cppyy.gbl.jaccard_u64x4_c,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_u64x4_c),
+            cppyy.gbl.JaccardKernel.JACCARD_U64X4_C
         ),
         (
-            "jaccard_b256_vpshufb_sad",
+            "JACCARD_B256_VPSHUFB_SAD",
             cppyy.gbl.jaccard_b256_vpshufb_sad,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_b256_vpshufb_sad),
+            cppyy.gbl.JaccardKernel.JACCARD_B256_VPSHUFB_SAD
         ),
         (
-            "jaccard_b256_vpopcntq",
+            "JACCARD_B256_VPOPCNTQ",
             cppyy.gbl.jaccard_b256_vpopcntq,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_b256_vpopcntq),
+            cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ
         ),
     ]
     kernels_numba_256d = [
@@ -364,40 +364,40 @@ def main(
     kernels_cpp_1024d = [
         # C++:
         (
-            "jaccard_u64x16_c",
+            "JACCARD_U64X16_C",
             cppyy.gbl.jaccard_u64x16_c,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_u64x16_c),
+            cppyy.gbl.JaccardKernel.JACCARD_U64X16_C
         ),
         (
-            "jaccard_u8x128_c",
+            "JACCARD_U8X128_C",
             cppyy.gbl.jaccard_u8x128_c,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_u8x128_c),
+            cppyy.gbl.JaccardKernel.JACCARD_U8X128_C
         ),
         (
-            "jaccard_u64x16_csa3_c",
+            "JACCARD_U64X16_CSA3_C",
             cppyy.gbl.jaccard_u64x16_csa3_c,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_u64x16_csa3_c),
+            cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA3_C
         ),
         (
-            "jaccard_u64x16_csa15_cpp",
+            "JACCARD_U64X16_CSA15_CPP",
             cppyy.gbl.jaccard_u64x16_csa15_cpp,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_u64x16_csa15_cpp),
+            cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA15_CPP
         ),
         # SIMD:
         (
-            "jaccard_b1024_vpopcntq",
+            "JACCARD_B1024_VPOPCNTQ",
             cppyy.gbl.jaccard_b1024_vpopcntq,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_b1024_vpopcntq),
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ
         ),
         (
-            "jaccard_b1024_vpshufb_sad",
+            "JACCARD_B1024_VPSHUFB_SAD",
             cppyy.gbl.jaccard_b1024_vpshufb_sad,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_b1024_vpshufb_sad),
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_SAD
         ),
         (
-            "jaccard_b1024_vpshufb_dpb",
+            "JACCARD_B1024_VPSHUFB_DPB",
             cppyy.gbl.jaccard_b1024_vpshufb_dpb,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_b1024_vpshufb_dpb),
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_DPB
         ),
     ]
     kernels_numba_1024d = [
@@ -417,20 +417,20 @@ def main(
     kernels_cpp_1536d = [
         # C++:
         (
-            "jaccard_u64x24_c",
+            "JACCARD_U64X24_C",
             cppyy.gbl.jaccard_u64x24_c,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_u64x24_c),
+            cppyy.gbl.JaccardKernel.JACCARD_U64X24_C
         ),
         # SIMD:
         (
-            "jaccard_b1536_vpopcntq",
+            "JACCARD_B1536_VPOPCNTQ",
             cppyy.gbl.jaccard_b1536_vpopcntq,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_b1536_vpopcntq),
+            cppyy.gbl.JaccardKernel.JACCARD_B1536_VPOPCNTQ
         ),
         (
-            "jaccard_b1536_vpopcntq_3csa",
+            "JACCARD_B1536_VPOPCNTQ_3CSA",
             cppyy.gbl.jaccard_b1536_vpopcntq_3csa,
-            cppyy.ll.addressof(cppyy.gbl.jaccard_b1536_vpopcntq_3csa),
+            cppyy.gbl.JaccardKernel.JACCARD_B1536_VPOPCNTQ_3CSA
         ),
     ]
     kernels_numba_1536d = [
