@@ -227,7 +227,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         }
     }
     // Word 96 to 127
-    for (size_t dim = 96; dim != 127; dim++){
+    for (size_t dim = 96; dim != 128; dim++){
         __m256i first = _mm256_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 8; i++){
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
@@ -253,7 +253,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     for (size_t i = 0; i < 256; i++){
         float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
         float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
-        distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - intersection / union_ : 1.0f;
+        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
     }
 }
 
