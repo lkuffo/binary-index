@@ -175,6 +175,7 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            __m256i second_org = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
             // Getting nibbles from data
             __m256i second_low = _mm256_and_si256(second, low_mask);
@@ -185,7 +186,7 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
                 _mm256_shuffle_epi8(lut_intersection_high, second_high)
             );
 
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second_org));
 
             intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
             unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
