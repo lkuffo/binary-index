@@ -56,6 +56,8 @@ static uint8_t unions_tmp[256];
 static float distances_tmp[256];
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
+// Comments:
+//          This version does 2 popcounts
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -89,6 +91,7 @@ void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 // Comments:
+//          This version does 4 shuffles
 //          4 shuffles vs 2 popcounts (version above)
 //          ZEN 4 | SHUFFLE: 2 cycles p1,2 - POPCNT: 2 cycles p0,1
 //                  As they are equally expensive, this kernel is slower (~15%) than using popcounts in PDX.
@@ -153,6 +156,16 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
     }
 }
 
+// 1-to-256 vectors
+// second_vector is a 256*256 matrix in a column-major layout
+// Comments:
+//          This version does 2 shuffles and 1 popcount
+//          ZEN 4 | SHUFFLE: 2 cycles p1,2 - POPCNT: 2 cycles p0,1
+//                  This should use all the ports in Zen4
+//
+//          SPR   | SHUFFLE: 1 cycle p1,5 - POPCNT: 3 cycles p5
+//                  ...
+//
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
@@ -185,7 +198,7 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
                 _mm256_shuffle_epi8(lut_intersection_high, second_high)
             );
 
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_si256(first, second));
 
             intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
             unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
