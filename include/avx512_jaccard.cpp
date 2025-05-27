@@ -205,6 +205,7 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
         } else {
             distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
         }
+        std::cout << "i: " << distances_tmp[i] << "\n";
     }
 };
 
