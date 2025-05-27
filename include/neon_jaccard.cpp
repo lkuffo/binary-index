@@ -291,9 +291,9 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
 ) {
     std::vector<KNNCandidate> result(knn * num_queries);
     std::vector<KNNCandidate> all_distances(num_vectors);
-    const uint8_t* query = first_vector;
+    const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
-        const uint8_t* data = second_vector;
+        const uint8_t* data = first_vector;
         // Fill all_distances by direct indexing
         for (size_t j = 0; j < num_vectors; ++j) {
             float current_distance;

@@ -26,6 +26,7 @@ enum JaccardKernel {
     JACCARD_B256_VPSHUFB_SAD,
     JACCARD_B256_VPOPCNTQ,
     JACCARD_B256_VPOPCNTQ_PDX,
+    JACCARD_B256_VPSHUFB_PDX,
     // 1024
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
@@ -601,9 +602,9 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
 ) {
     std::vector<KNNCandidate> result(knn * num_queries);
     std::vector<KNNCandidate> all_distances(num_vectors);
-    const uint8_t* query = first_vector;
+    const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
-        const uint8_t* data = second_vector;
+        const uint8_t* data = first_vector;
         // Fill all_distances by direct indexing
         for (size_t j = 0; j < num_vectors; ++j) {
 
@@ -614,6 +615,7 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
                 current_distance = jaccard_b256_vpshufb_sad(query, data);
             } else if constexpr (kernel == JACCARD_B256_VPOPCNTQ) {
                 current_distance = jaccard_b256_vpopcntq(query, data);
+
             } else if constexpr (kernel == JACCARD_U8X128_C) { // 1024
                 current_distance = jaccard_u8x128_c(query, data);
             } else if constexpr (kernel == JACCARD_U64X16_C) {
@@ -628,6 +630,7 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
                 current_distance = jaccard_u64x16_csa3_c(query, data);
             } else if constexpr (kernel == JACCARD_U64X16_CSA15_CPP) {
                 current_distance = jaccard_u64x16_csa15_cpp(query, data);
+
             } else if constexpr (kernel == JACCARD_U64X24_C) { // 1536
                 current_distance = jaccard_u64x24_c(query, data);
             } else if constexpr (kernel == JACCARD_B1536_VPOPCNTQ) {
@@ -680,6 +683,8 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 jaccard_b256_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PDX){
                 jaccard_b1024_vpopcntq_pdx(query, data);
+            } else if constexpr (kernel == JACCARD_B256_VPSHUFB_PDX){
+                current_distance = jaccard_b256_vpshufb_pdx(query, data);
             }
             // TODO: Ugly
             for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
@@ -723,6 +728,9 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_standalone_partial_sort<JACCARD_B256_VPOPCNTQ, 32>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B256_VPOPCNTQ_PDX:
             return jaccard_pdx_standalone_partial_sort<JACCARD_B256_VPOPCNTQ_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case JACCARD_B256_VPSHUFB_PDX:
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B256_VPSHUFB_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+
         case JACCARD_U8X128_C: // 1024
             return jaccard_standalone_partial_sort<JACCARD_U8X128_C, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_U64X16_C:
@@ -739,6 +747,7 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_standalone_partial_sort<JACCARD_U64X16_CSA15_CPP, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B1024_VPOPCNTQ_PDX:
             return jaccard_pdx_standalone_partial_sort<JACCARD_B1024_VPOPCNTQ_PDX, 128, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+
         case JACCARD_U64X24_C: // 1536
             return jaccard_standalone_partial_sort<JACCARD_U64X24_C, 192>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B1536_VPOPCNTQ:

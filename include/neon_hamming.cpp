@@ -202,12 +202,12 @@ std::vector<KNNCandidate> hamming_standalone_heap(
     size_t knn
 ) {
 
-    uint8_t const * query = first_vector;
+    uint8_t const * query = second_vector;
     std::priority_queue<KNNCandidate, std::vector<KNNCandidate>, VectorComparator> best_k;
     std::vector<KNNCandidate> result;
     result.resize(knn * num_queries);
     for (size_t i = 0; i < num_queries; i++) {
-        uint8_t const * data = second_vector;
+        uint8_t const * data = first_vector;
 
         for (size_t j = 0; j < num_vectors; j++) {
             uint32_t current_distance;
@@ -251,9 +251,9 @@ std::vector<KNNCandidate> hamming_standalone_partial_sort(
 ) {
     std::vector<KNNCandidate> result(knn * num_queries);
     std::vector<KNNCandidate> all_distances(num_vectors);
-    const uint8_t* query = first_vector;
+    const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
-        const uint8_t* data = second_vector;
+        const uint8_t* data = first_vector;
         // Fill all_distances by direct indexing
         for (size_t j = 0; j < num_vectors; ++j) {
             uint32_t current_distance;
