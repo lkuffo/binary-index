@@ -13,7 +13,7 @@
 # ?     uv run --script download.py --dataset cohere-en
 # ?     uv run --script download.py --dataset cohere-en --quantize
 # ?
-# ? Consider checking the `kernels.py` script afterwards with tests
+# ? Consider checking the `kernels_jaccard_avx.py` script afterwards with tests
 # ? for advanced population-counting schemes and other optimizations.
 
 import math

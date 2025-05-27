@@ -39,8 +39,8 @@ Native optimizations are implemented [NumBa](https://numba.pydata.org/) and [Cpp
 To benchmark and test the kernels on your hardware, run the following command:
 
 ```sh
-$ uv run --script kernels.py --count 10000 --ndims "1024,1536"
-$ uv run --script kernels.py --help # for more options
+$ uv run --script kernels_jaccard_avx.py --count 10000 --ndims "1024,1536"
+$ uv run --script kernels_jaccard_avx.py --help # for more options
 ```
 
 For other benchmarks real data can be used.
