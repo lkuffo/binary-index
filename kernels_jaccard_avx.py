@@ -22,6 +22,8 @@
 # ? be fetched.
 from typing import List, Literal
 import time
+import os
+os.environ["EXTRA_CLING_ARGS"] = "-O3 -march=native"
 
 import cppyy
 import cppyy.ll
@@ -286,7 +288,7 @@ def bench_kernel(
 def bench_standalone(
         vectors: np.ndarray,
         k: int,
-        kernel=cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ
+        kernel=cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ
 ) -> dict:
     queries = vectors.copy()
     bits_per_vector = vectors.shape[1] * 8
