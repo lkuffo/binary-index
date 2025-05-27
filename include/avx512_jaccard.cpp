@@ -1,6 +1,8 @@
 #include <cstdint>
 #include <cstddef>
+#include <algorithm>
 #include <iostream>
+#include <vector>
 #include <immintrin.h>
 
 struct KNNCandidate {
@@ -450,7 +452,7 @@ float jaccard_b1536_vpopcntq_3csa(uint8_t const *first_vector, uint8_t const *se
 }
 
 
-template <JaccardKernel kernel=JACCARD_B128_VPOPCNTQ, int N_WORDS=16>
+template <JaccardKernel kernel=JACCARD_B1024_VPOPCNTQ, int N_WORDS=16>
 std::vector<KNNCandidate> jaccard_standalone_partial_sort(
     uint8_t const *first_vector,
     uint8_t const *second_vector,

@@ -1,6 +1,8 @@
 #include <cstdint>
 #include <cstddef>
+#include <algorithm>
 #include <iostream>
+#include <vector>
 #include <arm_neon.h>
 
 
