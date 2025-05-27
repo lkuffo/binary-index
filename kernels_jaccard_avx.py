@@ -201,6 +201,15 @@ __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1536_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1536_vpopcntq_3csa(uint8_t const *first_vector, uint8_t const *second_vector);
+
+std::vector<KNNCandidate> jaccard_standalone(
+    JaccardKernel kernel,
+    uint8_t const *first_vector,
+    uint8_t const *second_vector,
+    size_t num_queries,
+    size_t num_vectors,
+    size_t knn);
+
 """)
 
 
