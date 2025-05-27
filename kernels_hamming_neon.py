@@ -83,10 +83,15 @@ struct VectorComparator {
 };
 
 enum HammingKernel {
+    // 128
     HAMMING_B128_VPOPCNTQ,
     HAMMING_B128_SERIAL_LUT,
     HAMMING_B128_SERIAL_BUILTINPOPCNT,
     HAMMING_B128_VPOPCNTQ_WORDBYWORD,
+    HAMMING_B128_VPOPCNTQ_PDX,
+    // 256
+    HAMMING_B256_VPOPCNTQ_PDX,
+    // 1536
     HAMMING_B1536_SERIAL,
     HAMMING_B1536_VPOPCNTQ_WORDBYWORD
 };
@@ -97,6 +102,9 @@ int32_t hamming_b128_serial_lut(uint8_t const *first_vector, uint8_t const *seco
 int32_t hamming_b1536_serial(uint8_t const *first_vector, uint8_t const *second_vector);
 int32_t hamming_b128_vpopcntq_wordbyword(uint8_t const *first_vector, uint8_t const *second_vector);
 int32_t hamming_b1536_vpopcntq_wordbyword(uint8_t const *first_vector, uint8_t const *second_vector);
+
+void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
     
 std::vector<KNNCandidate> hamming_standalone(
     HammingKernel kernel,
@@ -220,6 +228,55 @@ def bench_standalone(
     }
 
 
+def row_major_to_pdx(vectors, block_size=256) -> np.ndarray:
+    V, dims = vectors.shape  # V must be multiple of block_size
+    chunks = V // block_size
+    total_size = V * dims
+    result = np.empty(total_size, dtype=vectors.dtype)
+    cur_offset = 0
+    for i in range(chunks):
+        chunk = vectors[cur_offset: cur_offset + block_size, :]
+        # Flatten chunk in Fortran order and put into result
+        result[i * block_size * dims: (i + 1) * block_size * dims] = chunk.flatten(order='F')
+        cur_offset += block_size
+    return result
+
+def bench_standalone_pdx(
+        vectors: np.ndarray,
+        k: int,
+        kernel,
+) -> dict:
+    queries = vectors.copy()
+    bits_per_vector = vectors.shape[1] * 8
+
+    if len(vectors) % 256 != 0:
+        raise Exception('Number of vectors must be divisible by 256')
+
+    vectors_pdx = row_major_to_pdx(vectors, 256)
+
+    start = time.perf_counter()
+    result = cppyy.gbl.hamming_standalone(
+        kernel,
+        vectors_pdx, queries,
+        len(queries), len(vectors), k)
+    elapsed_s = time.perf_counter() - start
+    matches = []
+    for i in range(0, (len(queries) * k), k):
+        knn_candidate = result[i]
+        matches.append(knn_candidate.index)
+    # Reduce stats
+    computed_distances = len(queries) * len(vectors)
+    recalled_top_match = int((matches == np.arange(len(queries))).sum())
+    bit_ops_per_distance = bits_per_vector * 2
+    return {
+        "visited_members": computed_distances,
+        "computed_distances": computed_distances,
+        "elapsed_s": elapsed_s,
+        "bit_ops_per_s": computed_distances * bit_ops_per_distance / elapsed_s,
+        "recalled_top_match": recalled_top_match,
+    }
+
+
 def main(
         count: int,
         k: int = 1,
@@ -269,6 +326,20 @@ def main(
             hamming_u64x2_numba.address,
         ),
     ]
+    standalone_kernels_cpp_pdx_128d = [
+        (
+            "HAMMING_B128_VPOPCNTQ_PDX",
+            cppyy.gbl.hamming_b128_vpopcntq_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B128_VPOPCNTQ_PDX
+        )
+    ]
+    standalone_kernels_cpp_pdx_256d = [
+        (
+            "HAMMING_B256_VPOPCNTQ_PDX",
+            cppyy.gbl.hamming_b256_vpopcntq_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B256_VPOPCNTQ_PDX
+        )
+    ]
 
     # Group kernels by dimension:
     kernels_cpp_per_dimension = {
@@ -278,6 +349,11 @@ def main(
     kernels_numba_per_dimension = {
         128: kernels_numba_128d,
     }
+    kernels_cpp_pdx = {
+        128: standalone_kernels_cpp_pdx_128d,
+        256: standalone_kernels_cpp_pdx_256d,
+    }
+
 
     # Check which dimensions should be covered:
     for ndim in ndims:
@@ -285,6 +361,7 @@ def main(
         print(f"Testing {ndim:,}d kernels")
         kernels_cpp = kernels_cpp_per_dimension.get(ndim, [])
         kernels_numba = kernels_numba_per_dimension.get(ndim, [])
+        kernels_cpp_pdx = kernels_cpp_pdx.get(ndim, [])
         vectors = generate_random_vectors(count, ndim)
 
         # Run a few tests on this data:
@@ -306,7 +383,7 @@ def main(
         print("- passed!")
 
         # Provide FAISS benchmarking baselines:
-        print(f"Profiling FAISS over {count:,} vectors with {name} metric")
+        print(f"Profiling FAISS over {count:,} vectors with Hamming metric")
         stats = bench_faiss(
             vectors=vectors,
             k=k,
@@ -318,6 +395,12 @@ def main(
         for name, _, kernel_id in kernels_cpp:
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors")
             stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id)
+            print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+            print(f"- Recall@1: {stats['recalled_top_match'] / count:.2%}")
+
+        for name, _, kernel_id in kernels_cpp_pdx:
+            print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors")
+            stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Recall@1: {stats['recalled_top_match'] / count:.2%}")
 

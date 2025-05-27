@@ -5,6 +5,9 @@
 #include <vector>
 #include <immintrin.h>
 
+#include "jaccard_byte_luts.h"
+#include "jaccard_nibble_luts.h"
+
 struct KNNCandidate {
     uint32_t index;
     float distance;
@@ -41,6 +44,40 @@ enum JaccardKernel {
 // region: 256d kernels ///////
 ///////////////////////////////
 ///////////////////////////////
+
+static uint8_t intersections_tmp[256];
+static uint8_t unions_tmp[256];
+static float distances_tmp[256];
+// 1-to-256 vectors
+// second_vector is a 256*256 matrix in a column-major layout
+void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m256i intersections_result[8];
+    __m256i unions_result[8];
+    // Load initial values
+    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (probably overflows the registers)
+        intersections_result[i] = _mm256_set1_epi8(0);
+        unions_result[i] = _mm256_set1_epi8(0);
+    }
+    for (size_t dim = 0; dim != 32; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 8; i++){
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            __m256i intersection = _mm256_popcnt_epi64(_mm256_and_epi64(first, second));
+            __m256i union_ = _mm256_popcnt_epi64(_mm256_or_epi64(first, second));
+            intersections_result[i] = _mm256_add_epi8(intersections_result[i], and_count_vec);
+            unions_result[i] = _mm256_add_epi8(unions_result[i], or_count_vec);
+            second_vector += 32; // 256x8-bit values (8 registers of 256 bits at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 8; i++) {
+        _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
+        _mm256_storeu_si256((__m256i *)(unions_tmp + (i * 32)), unions_result[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
+    }
+}
 
 
 float jaccard_u64x4_c(uint8_t const *a, uint8_t const *b) {
@@ -519,6 +556,54 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
     return result;
 }
 
+template <JaccardKernel kernel=JACCARD_B256_VPOPCNTQ_PDX, int N_WORDS=16, int PDX_BLOCK_SIZE=256>
+std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
+    uint8_t const *first_vector,
+    uint8_t const *second_vector,
+    size_t num_queries,
+    size_t num_vectors,
+    size_t knn
+) {
+    std::vector<KNNCandidate> result(knn * num_queries);
+    std::vector<KNNCandidate> all_distances(num_vectors);
+    const uint8_t* query = second_vector;
+    for (size_t i = 0; i < num_queries; ++i) {
+        const uint8_t* data = first_vector;
+        // Fill all_distances by direct indexing
+        size_t global_offset = 0;
+        for (size_t j = 0; j < num_vectors; j+=PDX_BLOCK_SIZE) {
+            // TODO: Ugly
+            memset((void*) distances_tmp, 0, PDX_BLOCK_SIZE * sizeof(float));
+            memset((void*) intersections_tmp, 0, PDX_BLOCK_SIZE * sizeof(uint8_t));
+            memset((void*) unions_tmp, 0, PDX_BLOCK_SIZE * sizeof(uint8_t));
+            if constexpr (kernel == JACCARD_B256_VPOPCNTQ_PDX){
+                jaccard_b256_vpopcntq_pdx(query, data);
+            }
+            // TODO: Ugly
+            for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
+                all_distances[global_offset].index = global_offset;
+                all_distances[global_offset].distance = distances_tmp[z];
+                global_offset++;
+            }
+            data += N_WORDS * PDX_BLOCK_SIZE;
+        }
+
+        // Partial sort to get top-k
+        std::partial_sort(
+            all_distances.begin(),
+            all_distances.begin() + knn,
+            all_distances.end(),
+            VectorComparator()
+        );
+        // Copy top-k results to result vector
+        for (size_t k = 0; k < knn; ++k) {
+            result[i * knn + k] = all_distances[k];
+        }
+        query += N_WORDS;
+    }
+    return result;
+}
+
 std::vector<KNNCandidate> jaccard_standalone(
     JaccardKernel kernel,
     uint8_t const *first_vector,
@@ -534,6 +619,8 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_standalone_partial_sort<JACCARD_B256_VPSHUFB_SAD, 32>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B256_VPOPCNTQ:
             return jaccard_standalone_partial_sort<JACCARD_B256_VPOPCNTQ, 32>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case JACCARD_B256_VPOPCNTQ_PDX:
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B256_VPOPCNTQ_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_U8X128_C: // 1024
             return jaccard_standalone_partial_sort<JACCARD_U8X128_C, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_U64X16_C:
