@@ -144,16 +144,17 @@ def generate_random_vectors(count: int, bits_per_vector: int) -> np.ndarray:
 def bench_faiss(
         vectors: np.ndarray,
         k: int,
-        threads: int
+        threads: int,
+        query_count: int = 1000
 ) -> dict:
     faiss_set_threads(threads)
     n = vectors.shape[0]
-    queries = vectors.copy()
+    queries = vectors.copy()[:query_count]
     start = time.perf_counter()
     _, matches = faiss_knn(vectors, queries, k, metric=FAISS_METRIC_JACCARD)
     elapsed = time.perf_counter() - start
 
-    computed_distances = n * n
+    computed_distances = n * len(queries)
     recalled_top_match = int((matches[:, 0] == np.arange(n)).sum())
     bits_per_vector = vectors.shape[1] * 8
     bit_ops_per_distance = bits_per_vector * 2
@@ -172,6 +173,7 @@ def bench_kernel(
         k: int,
         threads: int,
         approximate: bool,
+        query_count: int = 1000
 ) -> dict:
     keys: np.ndarray = np.arange(vectors.shape[0], dtype=np.uint64)
     compiled_metric = CompiledMetric(
@@ -179,7 +181,7 @@ def bench_kernel(
         kind=MetricKind.Jaccard,
         signature=MetricSignature.ArrayArray,
     )
-    queries = vectors.copy()
+    queries = vectors.copy()[:query_count]
 
     bits_per_vector = vectors.shape[1] * 8
     start = time.perf_counter()
@@ -217,9 +219,10 @@ def bench_kernel(
 def bench_standalone(
         vectors: np.ndarray,
         k: int,
-        kernel=cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ
+        kernel=cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ,
+        query_count: int = 1000
 ) -> dict:
-    queries = vectors.copy()
+    queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
 
     start = time.perf_counter()
@@ -263,8 +266,9 @@ def bench_standalone_pdx(
         vectors: np.ndarray,
         k: int,
         kernel,
+        query_count: int = 1000
 ) -> dict:
-    queries = vectors.copy()
+    queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
 
     if len(vectors) % 256 != 0:
@@ -301,6 +305,7 @@ def main(
         ndims: List[int] = [256, 1024, 1536],
         approximate: bool = True,
         threads: int = 1,
+        query_count: int = -1
 ):
     standalone_kernels_cpp_128d = [
         (
@@ -382,6 +387,9 @@ def main(
         256: standalone_kernels_cpp_pdx_256d
     }
 
+    if query_count == -1:
+        query_count = count
+
     # Check which dimensions should be covered:
     for ndim in ndims:
         print("-" * 80)
@@ -410,26 +418,27 @@ def main(
         print("- passed!")
 
         # Provide FAISS benchmarking baselines:
-        print(f"Profiling FAISS over {count:,} vectors with Jaccard metric")
+        print(f"Profiling FAISS over {count:,} vectors and {query_count} queries with Jaccard metric")
         stats = bench_faiss(
             vectors=vectors,
             k=k,
-            threads=threads
+            threads=threads,
+            query_count=query_count
         )
         print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-        print(f"- Recall@1: {stats['recalled_top_match'] / count:.2%}")
+        print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         for name, _, kernel_id in kernels_cpp:
-            print(f"Profiling `{name}` in standalone c++ over {count:,} vectors")
-            stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id)
+            print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
+            stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-            print(f"- Recall@1: {stats['recalled_top_match'] / count:.2%}")
+            print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         for name, _, kernel_id in kernels_cpp_pdx:
-            print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors")
-            stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id)
+            print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
+            stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-            print(f"- Recall@1: {stats['recalled_top_match'] / count:.2%}")
+            print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
 
 if __name__ == "__main__":
@@ -468,6 +477,12 @@ if __name__ == "__main__":
         default=1,
         help="Number of threads to use for the benchmark",
     )
+    arg_parser.add_argument(
+        "--query_count",
+        type=int,
+        default=-1,
+        help="Number of queries to use for the benchmark",
+    )
     args = arg_parser.parse_args()
     main(
         count=args.count,
@@ -475,4 +490,5 @@ if __name__ == "__main__":
         ndims=args.ndims,
         approximate=args.approximate,
         threads=args.threads,
+        query_count=args.query_count
     )
