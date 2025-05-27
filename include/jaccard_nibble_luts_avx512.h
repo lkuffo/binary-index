@@ -230,14 +230,14 @@ static const __m512i m512_union_lut_15 = _mm512_set_epi8(
 );
 
 
-static const __m512i* m512_intersection_lookup_tables[16] = {
+static const __m512i m512_intersection_lookup_tables[16] = {
     m512_intersection_lut_0, m512_intersection_lut_1, m512_intersection_lut_2, m512_intersection_lut_3,
     m512_intersection_lut_4, m512_intersection_lut_5, m512_intersection_lut_6, m512_intersection_lut_7,
     m512_intersection_lut_8, m512_intersection_lut_9, m512_intersection_lut_10, m512_intersection_lut_11,
     m512_intersection_lut_12, m512_intersection_lut_13, m512_intersection_lut_14, m512_intersection_lut_15
 };
 
-static const __m512i* m512_union_lookup_tables[16] = {
+static const __m512i m512_union_lookup_tables[16] = {
     m512_union_lut_0, m512_union_lut_1, m512_union_lut_2, m512_union_lut_3,
     m512_union_lut_4, m512_union_lut_5, m512_union_lut_6, m512_union_lut_7,
     m512_union_lut_8, m512_union_lut_9, m512_union_lut_10, m512_union_lut_11,

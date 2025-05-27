@@ -166,14 +166,14 @@ static const __m256i m256_union_lut_15 = _mm256_set_epi8(
 );
 
 
-static const __m256i* m256_intersection_lookup_tables[16] = {
+static const __m256i m256_intersection_lookup_tables[16] = {
     m256_intersection_lut_0, m256_intersection_lut_1, m256_intersection_lut_2, m256_intersection_lut_3,
     m256_intersection_lut_4, m256_intersection_lut_5, m256_intersection_lut_6, m256_intersection_lut_7,
     m256_intersection_lut_8, m256_intersection_lut_9, m256_intersection_lut_10, m256_intersection_lut_11,
     m256_intersection_lut_12, m256_intersection_lut_13, m256_intersection_lut_14, m256_intersection_lut_15
 };
 
-static const __m256i* m256_union_lookup_tables[16] = {
+static const __m256i m256_union_lookup_tables[16] = {
     m256_union_lut_0, m256_union_lut_1, m256_union_lut_2, m256_union_lut_3,
     m256_union_lut_4, m256_union_lut_5, m256_union_lut_6, m256_union_lut_7,
     m256_union_lut_8, m256_union_lut_9, m256_union_lut_10, m256_union_lut_11,
