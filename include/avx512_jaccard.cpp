@@ -133,6 +133,9 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
         _mm256_storeu_si256((__m256i *)(unions_tmp + (i * 32)), unions_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
+        std::cout << "i: " << i << "\n";
+        std::cout << "--> union: " << unions_tmp[i] << "\n";
+        std::cout << "--> intersect: " << intersections_tmp[i] << "\n";
         distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
     }
 }
