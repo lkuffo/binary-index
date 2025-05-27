@@ -481,14 +481,14 @@ def main(
         print("- passed!")
 
         # Provide FAISS benchmarking baselines:
-        print(f"Profiling FAISS over {count:,} vectors with {name} metric")
-        stats = bench_faiss(
-            vectors=vectors,
-            k=k,
-            threads=threads
-        )
-        print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-        print(f"- Recall@1: {stats['recalled_top_match'] / count:.2%}")
+        # print(f"Profiling FAISS over {count:,} vectors with {name} metric")
+        # stats = bench_faiss(
+        #     vectors=vectors,
+        #     k=k,
+        #     threads=threads
+        # )
+        # print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+        # print(f"- Recall@1: {stats['recalled_top_match'] / count:.2%}")
 
         # Analyze all the kernels:
         for name, _, kernel_id in kernels_cpp:
