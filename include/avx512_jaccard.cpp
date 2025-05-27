@@ -97,8 +97,8 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
         unions_result[i] = _mm256_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
-        __m256i first_high = _mm256_set1_epi8((first_vector[dim] & 0xF0) >> 4);
-        __m256i first_low = _mm256_set1_epi8(first_vector[dim] & 0x0F);
+        __m256i first_high = first_vector[dim] & 0xF0) >> 4;
+        __m256i first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables (which are ideally already loaded in __m256i
         __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
