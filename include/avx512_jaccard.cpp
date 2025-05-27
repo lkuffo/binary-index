@@ -168,7 +168,6 @@ static uint8_t unions_tmp_1024_b[256];
 static uint8_t unions_tmp_1024_c[256];
 static uint8_t unions_tmp_1024_d[256];
 
-static float distances_tmp[256];
 // 1-to-256 vectors
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
