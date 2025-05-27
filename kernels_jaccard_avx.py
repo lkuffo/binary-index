@@ -187,7 +187,7 @@ float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector)
+void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 //
 // 1024 region
