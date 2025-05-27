@@ -100,7 +100,7 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
         uint8_t first_low = first_vector[dim] & 0x0F;
 
-        // Choose lookup tables (which are ideally already loaded in __m256i
+        // Choose lookup tables
         __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
         __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
         __m256i lut_union_high = m256_union_lookup_tables[first_high];
@@ -134,6 +134,7 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
     }
     for (size_t i = 0; i < 256; i++){
         distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
+        std::cout << i << ": " << distances_tmp[i] << "\n";
     }
 }
 
