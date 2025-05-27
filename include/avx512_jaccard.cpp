@@ -254,6 +254,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
         float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
         distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
+        std::cout << distances_tmp[i] << "\n";
     }
 }
 
@@ -676,8 +677,6 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
         for (size_t j = 0; j < num_vectors; j+=PDX_BLOCK_SIZE) {
             // TODO: Ugly
             memset((void*) distances_tmp, 0, PDX_BLOCK_SIZE * sizeof(float));
-//            memset((void*) intersections_tmp, 0, PDX_BLOCK_SIZE * sizeof(uint8_t));
-//            memset((void*) unions_tmp, 0, PDX_BLOCK_SIZE * sizeof(uint8_t));
             if constexpr (kernel == JACCARD_B256_VPOPCNTQ_PDX){
                 jaccard_b256_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PDX){
