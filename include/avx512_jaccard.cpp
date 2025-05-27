@@ -254,11 +254,6 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
         float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
         distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
-//        std::cout << "Vector: " << i << "\n";
-//        std::cout << distances_tmp[i] << "\n";
-//        std::cout << union_ << "\n";
-//        std::cout << intersection << "\n";
-//        std::cout << "\n\n";
     }
 }
 
