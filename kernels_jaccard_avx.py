@@ -166,6 +166,7 @@ enum JaccardKernel {
     JACCARD_B1024_VPSHUFB_DPB,
     JACCARD_U64X16_CSA3_C,
     JACCARD_U64X16_CSA15_CPP,
+    JACCARD_B1024_VPOPCNTQ_PDX,
     // 1536
     JACCARD_U64X24_C,
     JACCARD_B1536_VPOPCNTQ,
@@ -182,6 +183,7 @@ __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 //
 // 1024 region
@@ -500,6 +502,13 @@ def main(
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ_PDX
         )
     ]
+    standalone_kernels_cpp_pdx_1024d = [
+        (
+            "JACCARD_B1024_VPOPCNTQ_PDX",
+            cppyy.gbl.jaccard_b1024_vpopcntq_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PDX
+        )
+    ]
 
     # Group kernels by dimension:
     kernels_cpp_per_dimension = {
@@ -514,6 +523,7 @@ def main(
     }
     kernels_cpp_pdx = {
         256: standalone_kernels_cpp_pdx_256d,
+        1024: standalone_kernels_cpp_pdx_1024d,
     }
 
     # Check which dimensions should be covered:
