@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstddef>
+#include <string.h>
 #include <iostream>
 #include <arm_neon.h>
 #include <cassert>

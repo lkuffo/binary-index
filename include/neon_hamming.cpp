@@ -1,5 +1,6 @@
 #include <cstdint>
 #include <cstddef>
+#include <string.h>
 #include <algorithm>
 #include <iostream>
 #include <vector>
