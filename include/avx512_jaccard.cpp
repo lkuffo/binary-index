@@ -53,6 +53,7 @@ static float distances_tmp[256];
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    std::cout << "At least im entering here?" << "\n";
     __m256i intersections_result[8];
     __m256i unions_result[8];
     // Load initial values
