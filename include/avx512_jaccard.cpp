@@ -178,7 +178,6 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
         __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
         __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
 
-#pragma unroll
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
