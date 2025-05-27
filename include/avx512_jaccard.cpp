@@ -716,7 +716,7 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PDX){
                 jaccard_b1024_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B256_VPSHUFB_PDX){
-                current_distance = jaccard_b256_vpshufb_pdx(query, data);
+                jaccard_b256_vpshufb_pdx(query, data);
             }
             // TODO: Ugly
             for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
