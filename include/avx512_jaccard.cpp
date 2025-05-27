@@ -168,10 +168,10 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
         __m256i first = _mm256_set1_epi8(first_vector[dim]);
 
         // Choose lookup tables
-//        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
-//        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
-        __m256i lut_union_high = m256_union_lookup_tables[first_high];
-        __m256i lut_union_low = m256_union_lookup_tables[first_low];
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+//        __m256i lut_union_high = m256_union_lookup_tables[first_high];
+//        __m256i lut_union_low = m256_union_lookup_tables[first_low];
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
@@ -181,8 +181,8 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
             __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
 
             __m256i intersection = _mm256_add_epi8(
-                _mm256_shuffle_epi8(lut_union_low, second_low),
-                _mm256_shuffle_epi8(lut_union_high, second_high)
+                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_high)
             );
 
             __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));

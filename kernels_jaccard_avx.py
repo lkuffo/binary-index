@@ -377,6 +377,7 @@ def bench_standalone_pdx(
         knn_candidate = result[i]
         matches.append(knn_candidate.index)
     # Reduce stats
+    print(matches)
     computed_distances = len(queries) * len(vectors)
     recalled_top_match = int((matches == np.arange(len(queries))).sum())
     bit_ops_per_distance = bits_per_vector * 2
