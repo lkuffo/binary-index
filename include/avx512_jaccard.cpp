@@ -84,6 +84,38 @@ void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 }
 
 
+// 1-to-256 vectors
+// second_vector is a 256*256 matrix in a column-major layout
+void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m256i intersections_result[8];
+    __m256i unions_result[8];
+    // Load initial values
+    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
+        intersections_result[i] = _mm256_set1_epi8(0);
+        unions_result[i] = _mm256_set1_epi8(0);
+    }
+    for (size_t dim = 0; dim != 32; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 8; i++){
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
+            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
+            unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 8; i++) {
+        _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
+        _mm256_storeu_si256((__m256i *)(unions_tmp + (i * 32)), unions_result[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
+    }
+}
+
+
 float jaccard_u64x4_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
     uint64_t const *a64 = (uint64_t const *)a;
