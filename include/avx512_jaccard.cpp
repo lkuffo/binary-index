@@ -399,14 +399,14 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     __m512i unions_result_c[4];
     __m512i unions_result_d[4];
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
-        intersections_result_a[i] = _mm512_setzero_si512(0);
-        intersections_result_b[i] = _mm512_setzero_si512(0);
-        intersections_result_c[i] = _mm512_setzero_si512(0);
-        intersections_result_d[i] = _mm512_setzero_si512(0);
-        unions_result_a[i] = _mm512_setzero_si512(0);
-        unions_result_b[i] = _mm512_setzero_si512(0);
-        unions_result_c[i] = _mm512_setzero_si512(0);
-        unions_result_d[i] = _mm512_setzero_si512(0);
+        intersections_result_a[i] = _mm512_setzero_si512();
+        intersections_result_b[i] = _mm512_setzero_si512();
+        intersections_result_c[i] = _mm512_setzero_si512();
+        intersections_result_d[i] = _mm512_setzero_si512();
+        unions_result_a[i] = _mm512_setzero_si512();
+        unions_result_b[i] = _mm512_setzero_si512();
+        unions_result_c[i] = _mm512_setzero_si512();
+        unions_result_d[i] = _mm512_setzero_si512();
     }
     // Word 0 to 31
     for (size_t dim = 0; dim != 32; dim++){
