@@ -198,7 +198,7 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
                 _mm256_shuffle_epi8(lut_intersection_high, second_high)
             );
 
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_si256(first, second));
+            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
 
             intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
             unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
