@@ -159,6 +159,7 @@ enum JaccardKernel {
     JACCARD_B256_VPOPCNTQ,
     JACCARD_B256_VPOPCNTQ_PDX,
     JACCARD_B256_VPSHUFB_PDX,
+    JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX,
     // 1024
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
@@ -186,6 +187,7 @@ float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector)
 
 //
 // 1024 region
@@ -514,6 +516,11 @@ def main(
             cppyy.gbl.jaccard_b256_vpshufb_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPSHUFB_PDX
         ),
+        (
+            "JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX",
+            cppyy.gbl.jaccard_b256_vpopcntq_vpshufb_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX
+        )
     ]
     standalone_kernels_cpp_pdx_1024d = [
         (
