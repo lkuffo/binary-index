@@ -56,7 +56,7 @@ void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
     __m256i intersections_result[8];
     __m256i unions_result[8];
     // Load initial values
-    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (probably overflows the registers)
+    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
         intersections_result[i] = _mm256_set1_epi8(0);
         unions_result[i] = _mm256_set1_epi8(0);
     }
@@ -68,7 +68,7 @@ void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
             __m256i union_ = _mm256_popcnt_epi64(_mm256_or_epi64(first, second));
             intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
             unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
-            second_vector += 32; // 256x8-bit values (8 registers of 256 bits at a time)
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
         }
     }
     // TODO: Ugly
@@ -568,9 +568,9 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
 ) {
     std::vector<KNNCandidate> result(knn * num_queries);
     std::vector<KNNCandidate> all_distances(num_vectors);
-    const uint8_t* query = first_vector;
+    const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
-        const uint8_t* data = second_vector;
+        const uint8_t* data = first_vector;
         // Fill all_distances by direct indexing
         size_t global_offset = 0;
         for (size_t j = 0; j < num_vectors; j+=PDX_BLOCK_SIZE) {
