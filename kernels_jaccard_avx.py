@@ -356,7 +356,7 @@ def bench_standalone_pdx(
     vectors_pdx = row_major_to_pdx(vectors, 256)
 
     start = time.perf_counter()
-    result = cppyy.gbl.hamming_standalone(
+    result = cppyy.gbl.jaccard_standalone(
         kernel,
         vectors_pdx, queries,
         len(queries), len(vectors), k)
