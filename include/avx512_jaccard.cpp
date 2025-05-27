@@ -558,7 +558,7 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
     return result;
 }
 
-template <JaccardKernel kernel=JACCARD_B256_VPOPCNTQ_PDX, int N_WORDS=16, int PDX_BLOCK_SIZE=256>
+template <JaccardKernel kernel=JACCARD_B256_VPOPCNTQ_PDX, int N_WORDS=32, int PDX_BLOCK_SIZE=256>
 std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
     uint8_t const *first_vector,
     uint8_t const *second_vector,
