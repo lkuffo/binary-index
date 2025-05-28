@@ -413,7 +413,6 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 0 to 31
     for (size_t dim = 0; dim != 32; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        #pragma unroll
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
@@ -426,7 +425,6 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 32 to 63
     for (size_t dim = 32; dim != 64; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        #pragma unroll
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
@@ -439,7 +437,6 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 64 to 95
     for (size_t dim = 64; dim != 96; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        #pragma unroll
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
@@ -452,7 +449,6 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 96 to 127
     for (size_t dim = 96; dim != 128; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        #pragma unroll
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
