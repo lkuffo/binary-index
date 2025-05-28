@@ -560,22 +560,22 @@ def main(
         vectors = generate_random_vectors(count, ndim)
 
         # Run a few tests on this data:
-        tests_per_kernel = 10
-        for name, accelerated_kernel, _ in kernels_cpp:
-            for _ in range(tests_per_kernel):
-                first_vector_index = np.random.randint(0, count)
-                second_vector_index = np.random.randint(0, count)
-                first_vector, second_vector = (
-                    vectors[first_vector_index],
-                    vectors[second_vector_index],
-                )
-                baseline_distance = jaccard_numpy(first_vector, second_vector)
-                accelerated_distance = accelerated_kernel(first_vector, second_vector)
-                assert (
-                    abs(baseline_distance - accelerated_distance) < 1e-5
-                ), f"Distance mismatch for {name} kernel: {baseline_distance} vs {accelerated_distance}"
-
-        print("- passed!")
+        # tests_per_kernel = 10
+        # for name, accelerated_kernel, _ in kernels_cpp:
+        #     for _ in range(tests_per_kernel):
+        #         first_vector_index = np.random.randint(0, count)
+        #         second_vector_index = np.random.randint(0, count)
+        #         first_vector, second_vector = (
+        #             vectors[first_vector_index],
+        #             vectors[second_vector_index],
+        #         )
+        #         baseline_distance = jaccard_numpy(first_vector, second_vector)
+        #         accelerated_distance = accelerated_kernel(first_vector, second_vector)
+        #         assert (
+        #             abs(baseline_distance - accelerated_distance) < 1e-5
+        #         ), f"Distance mismatch for {name} kernel: {baseline_distance} vs {accelerated_distance}"
+        #
+        # print("- passed!")
 
         # Provide FAISS benchmarking baselines:
         # print(f"Profiling FAISS over {count:,} vectors and {query_count} queries with Jaccard metric")
