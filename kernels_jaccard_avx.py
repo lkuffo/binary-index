@@ -591,7 +591,6 @@ def main(
 
         # Analyze all the kernels:
         vectors_pdx = row_major_to_pdx(vectors, 256)
-        print('Repetition', i)
         for name, _, kernel_id in kernels_cpp:
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
             stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count)
