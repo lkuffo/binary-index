@@ -299,175 +299,86 @@ static uint8_t unions_tmp_1024_b[256];
 static uint8_t unions_tmp_1024_c[256];
 static uint8_t unions_tmp_1024_d[256];
 
-// 1-to-256 vectors
-// second_vector is a 256*1024 matrix in a column-major layout
-// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m256i intersections_result_a[8];
-    __m256i intersections_result_b[8];
-    __m256i intersections_result_c[8];
-    __m256i intersections_result_d[8];
-    __m256i unions_result_a[8];
-    __m256i unions_result_b[8];
-    __m256i unions_result_c[8];
-    __m256i unions_result_d[8];
-    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
-        intersections_result_a[i] = _mm256_set1_epi8(0);
-        intersections_result_b[i] = _mm256_set1_epi8(0);
-        intersections_result_c[i] = _mm256_set1_epi8(0);
-        intersections_result_d[i] = _mm256_set1_epi8(0);
-        unions_result_a[i] = _mm256_set1_epi8(0);
-        unions_result_b[i] = _mm256_set1_epi8(0);
-        unions_result_c[i] = _mm256_set1_epi8(0);
-        unions_result_d[i] = _mm256_set1_epi8(0);
-    }
-    // Word 0 to 31
-    for (size_t dim = 0; dim != 32; dim++){
-        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
-            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-            intersections_result_a[i] = _mm256_add_epi8(intersections_result_a[i], intersection);
-            unions_result_a[i] = _mm256_add_epi8(unions_result_a[i], union_);
-            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
-    // Word 32 to 63
-    for (size_t dim = 32; dim != 64; dim++){
-        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
-            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-            intersections_result_b[i] = _mm256_add_epi8(intersections_result_b[i], intersection);
-            unions_result_b[i] = _mm256_add_epi8(unions_result_b[i], union_);
-            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
-    // Word 64 to 95
-    for (size_t dim = 64; dim != 96; dim++){
-        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
-            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-            intersections_result_c[i] = _mm256_add_epi8(intersections_result_c[i], intersection);
-            unions_result_c[i] = _mm256_add_epi8(unions_result_c[i], union_);
-            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
-    // Word 96 to 127
-    for (size_t dim = 96; dim != 128; dim++){
-        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
-            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-            intersections_result_d[i] = _mm256_add_epi8(intersections_result_d[i], intersection);
-            unions_result_d[i] = _mm256_add_epi8(unions_result_d[i], union_);
-            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
-    // TODO: Ugly
-    for (size_t i = 0; i < 8; i++) {
-        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_a + (i * 32)), intersections_result_a[i]);
-        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_a + (i * 32)), unions_result_a[i]);
-        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_b + (i * 32)), intersections_result_b[i]);
-        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_b + (i * 32)), unions_result_b[i]);
-        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_c + (i * 32)), intersections_result_c[i]);
-        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_c + (i * 32)), unions_result_c[i]);
-        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_d + (i * 32)), intersections_result_d[i]);
-        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_d + (i * 32)), unions_result_d[i]);
-    }
-    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
-    for (size_t i = 0; i < 256; i++){
-        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
-        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
-        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
-    }
-}
-
-// 1-to-256 vectors
-// second_vector is a 256*1024 matrix in a column-major layout
-// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
+//// 1-to-256 vectors
+//// second_vector is a 256*1024 matrix in a column-major layout
+//// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
 //void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-//    __m512i intersections_result_a[4];
-//    __m512i intersections_result_b[4];
-//    __m512i intersections_result_c[4];
-//    __m512i intersections_result_d[4];
-//    __m512i unions_result_a[4];
-//    __m512i unions_result_b[4];
-//    __m512i unions_result_c[4];
-//    __m512i unions_result_d[4];
-//    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
-//        intersections_result_a[i] = _mm512_setzero_si512();
-//        intersections_result_b[i] = _mm512_setzero_si512();
-//        intersections_result_c[i] = _mm512_setzero_si512();
-//        intersections_result_d[i] = _mm512_setzero_si512();
-//        unions_result_a[i] = _mm512_setzero_si512();
-//        unions_result_b[i] = _mm512_setzero_si512();
-//        unions_result_c[i] = _mm512_setzero_si512();
-//        unions_result_d[i] = _mm512_setzero_si512();
+//    __m256i intersections_result_a[8];
+//    __m256i intersections_result_b[8];
+//    __m256i intersections_result_c[8];
+//    __m256i intersections_result_d[8];
+//    __m256i unions_result_a[8];
+//    __m256i unions_result_b[8];
+//    __m256i unions_result_c[8];
+//    __m256i unions_result_d[8];
+//    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
+//        intersections_result_a[i] = _mm256_set1_epi8(0);
+//        intersections_result_b[i] = _mm256_set1_epi8(0);
+//        intersections_result_c[i] = _mm256_set1_epi8(0);
+//        intersections_result_d[i] = _mm256_set1_epi8(0);
+//        unions_result_a[i] = _mm256_set1_epi8(0);
+//        unions_result_b[i] = _mm256_set1_epi8(0);
+//        unions_result_c[i] = _mm256_set1_epi8(0);
+//        unions_result_d[i] = _mm256_set1_epi8(0);
 //    }
 //    // Word 0 to 31
 //    for (size_t dim = 0; dim != 32; dim++){
-//        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 4; i++){
-//            __m512i second = _mm512_loadu_epi8(second_vector);
-//            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-//            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-//            intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
-//            unions_result_a[i] = _mm512_add_epi8(unions_result_a[i], union_);
-//            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+//        for (size_t i = 0; i < 8; i++){
+//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
+//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+//            intersections_result_a[i] = _mm256_add_epi8(intersections_result_a[i], intersection);
+//            unions_result_a[i] = _mm256_add_epi8(unions_result_a[i], union_);
+//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
 //        }
 //    }
 //    // Word 32 to 63
 //    for (size_t dim = 32; dim != 64; dim++){
-//        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 4; i++){
-//            __m512i second = _mm512_loadu_epi8(second_vector);
-//            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-//            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-//            intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
-//            unions_result_b[i] = _mm512_add_epi8(unions_result_b[i], union_);
-//            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+//        for (size_t i = 0; i < 8; i++){
+//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
+//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+//            intersections_result_b[i] = _mm256_add_epi8(intersections_result_b[i], intersection);
+//            unions_result_b[i] = _mm256_add_epi8(unions_result_b[i], union_);
+//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
 //        }
 //    }
 //    // Word 64 to 95
 //    for (size_t dim = 64; dim != 96; dim++){
-//        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 4; i++){
-//            __m512i second = _mm512_loadu_epi8(second_vector);
-//            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-//            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-//            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
-//            unions_result_c[i] = _mm512_add_epi8(unions_result_c[i], union_);
-//            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+//        for (size_t i = 0; i < 8; i++){
+//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
+//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+//            intersections_result_c[i] = _mm256_add_epi8(intersections_result_c[i], intersection);
+//            unions_result_c[i] = _mm256_add_epi8(unions_result_c[i], union_);
+//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
 //        }
 //    }
 //    // Word 96 to 127
 //    for (size_t dim = 96; dim != 128; dim++){
-//        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 4; i++){
-//            __m512i second = _mm512_loadu_epi8(second_vector);
-//            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-//            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-//            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
-//            unions_result_d[i] = _mm512_add_epi8(unions_result_d[i], union_);
-//            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+//        for (size_t i = 0; i < 8; i++){
+//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
+//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+//            intersections_result_d[i] = _mm256_add_epi8(intersections_result_d[i], intersection);
+//            unions_result_d[i] = _mm256_add_epi8(unions_result_d[i], union_);
+//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
 //        }
 //    }
 //    // TODO: Ugly
-//    for (size_t i = 0; i < 4; i++) {
-//        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
-//        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_a + (i * 64)), unions_result_a[i]);
-//        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
-//        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_b + (i * 64)), unions_result_b[i]);
-//        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
-//        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_c + (i * 64)), unions_result_c[i]);
-//        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
-//        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_d + (i * 64)), unions_result_d[i]);
+//    for (size_t i = 0; i < 8; i++) {
+//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_a + (i * 32)), intersections_result_a[i]);
+//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_a + (i * 32)), unions_result_a[i]);
+//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_b + (i * 32)), intersections_result_b[i]);
+//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_b + (i * 32)), unions_result_b[i]);
+//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_c + (i * 32)), intersections_result_c[i]);
+//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_c + (i * 32)), unions_result_c[i]);
+//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_d + (i * 32)), intersections_result_d[i]);
+//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_d + (i * 32)), unions_result_d[i]);
 //    }
 //    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
 //    for (size_t i = 0; i < 256; i++){
@@ -476,6 +387,95 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
 //        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
 //    }
 //}
+
+// 1-to-256 vectors
+// second_vector is a 256*1024 matrix in a column-major layout
+// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
+void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m512i intersections_result_a[4];
+    __m512i intersections_result_b[4];
+    __m512i intersections_result_c[4];
+    __m512i intersections_result_d[4];
+    __m512i unions_result_a[4];
+    __m512i unions_result_b[4];
+    __m512i unions_result_c[4];
+    __m512i unions_result_d[4];
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
+        intersections_result_a[i] = _mm512_setzero_si512();
+        intersections_result_b[i] = _mm512_setzero_si512();
+        intersections_result_c[i] = _mm512_setzero_si512();
+        intersections_result_d[i] = _mm512_setzero_si512();
+        unions_result_a[i] = _mm512_setzero_si512();
+        unions_result_b[i] = _mm512_setzero_si512();
+        unions_result_c[i] = _mm512_setzero_si512();
+        unions_result_d[i] = _mm512_setzero_si512();
+    }
+    // Word 0 to 31
+    for (size_t dim = 0; dim != 32; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
+            unions_result_a[i] = _mm512_add_epi8(unions_result_a[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 32 to 63
+    for (size_t dim = 32; dim != 64; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
+            unions_result_b[i] = _mm512_add_epi8(unions_result_b[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 64 to 95
+    for (size_t dim = 64; dim != 96; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
+            unions_result_c[i] = _mm512_add_epi8(unions_result_c[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 96 to 127
+    for (size_t dim = 96; dim != 128; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
+            unions_result_d[i] = _mm512_add_epi8(unions_result_d[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_a + (i * 64)), unions_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_b + (i * 64)), unions_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_c + (i * 64)), unions_result_c[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_d + (i * 64)), unions_result_d[i]);
+    }
+    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
+    for (size_t i = 0; i < 256; i++){
+        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
+        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
+        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
+    }
+}
 
 float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
