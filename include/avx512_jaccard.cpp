@@ -165,7 +165,7 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 //                  ...
 //
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m512i low_mask = _mm256_set1_epi8(0x0f);
+    __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i intersections_result[4];
     __m512i unions_result[4];
     // Load initial values
@@ -189,7 +189,7 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
             __m512i second_low = _mm512_and_epi64(second, low_mask);
             __m512i second_high = _mm512_and_epi64(_mm512_srli_epi16(second, 4), low_mask);
 
-            __m512i intersection = _mm256_add_epi8(
+            __m512i intersection = _mm512_add_epi8(
                 _mm512_shuffle_epi8(lut_intersection_low, second_low),
                 _mm512_shuffle_epi8(lut_intersection_high, second_low)
             );
@@ -203,8 +203,8 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
     }
     // TODO: Ugly
     for (size_t i = 0; i < 4; i++) {
-        _mm256_storeu_si256((__m512i *)(intersections_tmp + (i * 64)), intersections_result[i]);
-        _mm256_storeu_si256((__m512i *)(unions_tmp + (i * 64)), unions_result[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp + (i * 64)), intersections_result[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp + (i * 64)), unions_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
         distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
