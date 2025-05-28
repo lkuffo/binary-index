@@ -546,8 +546,13 @@ void jaccard_b1024_vpopcntq_precomputed_pdx(
     // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
     for (size_t i = 0; i < 256; i++){
         float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
-        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
-        distances_tmp[i] = (union_ != 0) ? 1 - intersection / (first_popcount + second_popcounts[i] - intersection) : 1.0f;
+        std::cout << "i: " << i << "\n";
+        std::cout << "--> int: " << intersection << "\n";
+        std::cout << "--> query_popcnt: " << first_popcount << "\n";
+        std::cout << "--> i_popcnt: " << second_popcounts[i] << "\n";
+        float denominator = first_popcount + second_popcounts[i] - intersection;
+        distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+        std::cout << "--> distance: " << distances_tmp[i] << "\n";
     }
 }
 
