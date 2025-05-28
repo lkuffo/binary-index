@@ -33,6 +33,7 @@ enum JaccardKernel {
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
     JACCARD_B1024_VPOPCNTQ,
+    JACCARD_B1024_VPOPCNTQ_PRECOMPUTED,
     JACCARD_B1024_VPSHUFB_SAD,
     JACCARD_B1024_VPSHUFB_DPB,
     JACCARD_U64X16_CSA3_C,
@@ -590,6 +591,28 @@ float jaccard_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_
     return 1.f - (_mm512_reduce_add_epi64(intersection) + 1.f) / (_mm512_reduce_add_epi64(union_) + 1.f);
 }
 
+// Define the AVX-512 variant using the `vpopcntq` instruction.
+// It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b1024_vpopcntq_precomputed(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const popcount_first, uint32_t const popcount_second
+) {
+    __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
+    __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
+    __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
+    __m512i second_end = _mm512_loadu_si512((__m512i const*)(second_vector + 64));
+
+    __m512i intersection_start = _mm512_popcnt_epi64(_mm512_and_epi64(first_start, second_start));
+    __m512i intersection_end = _mm512_popcnt_epi64(_mm512_and_epi64(first_end, second_end));
+
+    __m512i intersection_ = _mm512_add_epi64(intersection_start, intersection_end);
+
+    auto intersection = _mm512_reduce_add_epi64(intersection_);
+    float denominator = popcount_first + popcount_second - intersection;
+    return (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+}
+
 // Define the AVX-512 variant using the `vpshufb` and `vpsadbw` instruction.
 // It resorts to cheaper byte-shuffling instructions, than population counts.
 // Source: https://github.com/CountOnes/hamming_weight/blob/1dd7554c0fc39e01c9d7fa54372fd4eccf458875/src/sse_jaccard_index.c#L17
@@ -891,13 +914,23 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
     uint8_t const *second_vector,
     size_t num_queries,
     size_t num_vectors,
-    size_t knn
+    size_t knn,
+    uint32_t const *precomputed_popcnts = nullptr
 ) {
     std::vector<KNNCandidate> result(knn * num_queries);
     std::vector<KNNCandidate> all_distances(num_vectors);
     const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
         const uint8_t* data = first_vector;
+        uint32_t query_popcnt;
+        if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED){
+                // Simple popcount for query
+                query_popcnt = 0;
+                #pragma unroll
+                for (size_t i = 0; i != N_WORDS; ++i) {
+                    query_popcnt += __builtin_popcount(query[i]);
+                }
+        }
         // Fill all_distances by direct indexing
         for (size_t j = 0; j < num_vectors; ++j) {
 
@@ -923,7 +956,8 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
                 current_distance = jaccard_u64x16_csa3_c(query, data);
             } else if constexpr (kernel == JACCARD_U64X16_CSA15_CPP) {
                 current_distance = jaccard_u64x16_csa15_cpp(query, data);
-
+            } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED) {
+                current_distance = jaccard_b1024_vpopcntq_precomputed(query, data, query_popcount, precomputed_popcnts[j]);
             } else if constexpr (kernel == JACCARD_U64X24_C) { // 1536
                 current_distance = jaccard_u64x24_c(query, data);
             } else if constexpr (kernel == JACCARD_B1536_VPOPCNTQ) {
@@ -1050,6 +1084,8 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_standalone_partial_sort<JACCARD_U64X16_C, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B1024_VPOPCNTQ:
             return jaccard_standalone_partial_sort<JACCARD_B1024_VPOPCNTQ, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case JACCARD_B1024_VPOPCNTQ_PRECOMPUTED:
+            return jaccard_standalone_partial_sort<JACCARD_B1024_VPOPCNTQ_PRECOMPUTED, 128>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
         case JACCARD_B1024_VPSHUFB_SAD:
             return jaccard_standalone_partial_sort<JACCARD_B1024_VPSHUFB_SAD, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B1024_VPSHUFB_DPB:

@@ -164,6 +164,7 @@ enum JaccardKernel {
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
     JACCARD_B1024_VPOPCNTQ,
+    JACCARD_B1024_VPOPCNTQ_PRECOMPUTED,
     JACCARD_B1024_VPSHUFB_SAD,
     JACCARD_B1024_VPSHUFB_DPB,
     JACCARD_U64X16_CSA3_C,
@@ -184,12 +185,18 @@ __attribute__((target("avx2,bmi2,avx")))
 float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b1024_vpopcntq_precomputed(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const popcount_first, uint32_t const popcount_second
+);
 
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+
 
 //
 // 1024 region
@@ -320,10 +327,19 @@ def bench_standalone(
     bits_per_vector = vectors.shape[1] * 8
 
     start = time.perf_counter()
-    result = cppyy.gbl.jaccard_standalone(
-        kernel,
-        vectors, queries,
-        len(queries), len(vectors), k)
+    if kernel == cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED:
+        data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
+        assert len(data_popcounts) == len(vectors)
+        start = time.perf_counter()
+        result = cppyy.gbl.jaccard_standalone(
+            kernel,
+            vectors, queries,
+            len(queries), len(vectors), k, data_popcounts)
+    else:
+        result = cppyy.gbl.jaccard_standalone(
+            kernel,
+            vectors, queries,
+            len(queries), len(vectors), k)
     elapsed_s = time.perf_counter() - start
     matches = []
     for i in range(0, (len(queries) * k), k):
@@ -504,6 +520,11 @@ def main(
             "JACCARD_B1536_VPOPCNTQ",
             cppyy.gbl.jaccard_b1536_vpopcntq,
             cppyy.gbl.JaccardKernel.JACCARD_B1536_VPOPCNTQ
+        ),
+        (
+            "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED",
+            cppyy.gbl.jaccard_b1024_vpopcntq_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED
         ),
         (
             "JACCARD_B1536_VPOPCNTQ_3CSA",
