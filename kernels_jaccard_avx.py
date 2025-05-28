@@ -354,6 +354,7 @@ def row_major_to_pdx(vectors, block_size=256) -> np.ndarray:
 
 def bench_standalone_pdx(
         vectors: np.ndarray,
+        vectors_pdx: np.ndarray,
         k: int,
         kernel,
         query_count: int = 1000
@@ -364,7 +365,7 @@ def bench_standalone_pdx(
     if len(vectors) % 256 != 0:
         raise Exception('Number of vectors must be divisible by 256')
 
-    vectors_pdx = row_major_to_pdx(vectors, 256)
+    # vectors_pdx = row_major_to_pdx(vectors, 256)
 
     start = time.perf_counter()
     result = cppyy.gbl.jaccard_standalone(
@@ -589,6 +590,7 @@ def main(
         # print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         # Analyze all the kernels:
+        vectors_pdx = row_major_to_pdx(vectors, 256)
         for i in range(5):
             print('Repetition', i)
             for name, _, kernel_id in kernels_cpp:
@@ -600,7 +602,7 @@ def main(
 
             for name, _, kernel_id in kernels_cpp_pdx:
                 print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
-                stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count)
+                stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, k=k, kernel=kernel_id, query_count=query_count)
                 print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                 print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
                 print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
