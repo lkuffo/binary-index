@@ -167,7 +167,7 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 //                  ...
 //
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m256i low_mask = _mm512_set1_epi8(0x0f);
+    __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m512i unions_result[4];
     // Load initial values
