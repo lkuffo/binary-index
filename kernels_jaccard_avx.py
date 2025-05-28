@@ -428,26 +428,26 @@ def main(
 
     kernels_cpp_1024d = [
         # C++:
-        (
-            "JACCARD_U64X16_C",
-            cppyy.gbl.jaccard_u64x16_c,
-            cppyy.gbl.JaccardKernel.JACCARD_U64X16_C
-        ),
-        (
-            "JACCARD_U8X128_C",
-            cppyy.gbl.jaccard_u8x128_c,
-            cppyy.gbl.JaccardKernel.JACCARD_U8X128_C
-        ),
-        (
-            "JACCARD_U64X16_CSA3_C",
-            cppyy.gbl.jaccard_u64x16_csa3_c,
-            cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA3_C
-        ),
-        (
-            "JACCARD_U64X16_CSA15_CPP",
-            cppyy.gbl.jaccard_u64x16_csa15_cpp,
-            cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA15_CPP
-        ),
+        # (
+        #     "JACCARD_U64X16_C",
+        #     cppyy.gbl.jaccard_u64x16_c,
+        #     cppyy.gbl.JaccardKernel.JACCARD_U64X16_C
+        # ),
+        # (
+        #     "JACCARD_U8X128_C",
+        #     cppyy.gbl.jaccard_u8x128_c,
+        #     cppyy.gbl.JaccardKernel.JACCARD_U8X128_C
+        # ),
+        # (
+        #     "JACCARD_U64X16_CSA3_C",
+        #     cppyy.gbl.jaccard_u64x16_csa3_c,
+        #     cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA3_C
+        # ),
+        # (
+        #     "JACCARD_U64X16_CSA15_CPP",
+        #     cppyy.gbl.jaccard_u64x16_csa15_cpp,
+        #     cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA15_CPP
+        # ),
         # SIMD:
         (
             "JACCARD_B1024_VPOPCNTQ",
@@ -459,11 +459,11 @@ def main(
             cppyy.gbl.jaccard_b1024_vpshufb_sad,
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_SAD
         ),
-        (
-            "JACCARD_B1024_VPSHUFB_DPB",
-            cppyy.gbl.jaccard_b1024_vpshufb_dpb,
-            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_DPB
-        ),
+        # (
+        #     "JACCARD_B1024_VPSHUFB_DPB",
+        #     cppyy.gbl.jaccard_b1024_vpshufb_dpb,
+        #     cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_DPB
+        # ),
     ]
     kernels_numba_1024d = [
         # Baselines:
