@@ -169,15 +169,14 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
-    __m512i unions_result[4];
+    __m256i unions_result[8];
     // Load initial values
-    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
+    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
         intersections_result[i] = _mm256_set1_epi8(0);
-        intersections_result[i + 4] = _mm256_set1_epi8(0);
-        unions_result[i] = _mm512_setzero_si512();
+        unions_result[i] = _mm256_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
-        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
         uint8_t first_low = first_vector[dim] & 0x0F;
 
@@ -185,40 +184,29 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
         __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
         __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
 
-        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
-            __m512i second = _mm512_loadu_epi8(second_vector);
-            __m256i second_high = _mm256_loadu_epi8((__m256i const*)(second_vector));
-            __m256i second_low = _mm256_loadu_epi8((__m256i const*)(second_vector + 32));
+        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
             // Getting nibbles from data
-            __m256i second_low_low = _mm256_and_epi64(second_low, low_mask);
-            __m256i second_low_high = _mm256_and_epi64(_mm256_srli_epi16(second_low, 4), low_mask);
-            __m256i second_high_low = _mm256_and_epi64(second_low, low_mask);
-            __m256i second_high_high = _mm256_and_epi64(_mm256_srli_epi16(second_low, 4), low_mask);
+            __m256i second_low = _mm256_and_si256(second, low_mask);
+            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
 
-            __m256i intersection_high = _mm256_add_epi8(
-                _mm256_shuffle_epi8(lut_intersection_low, second_high_low),
-                _mm256_shuffle_epi8(lut_intersection_high, second_high_high)
-            );
-            __m256i intersection_low = _mm256_add_epi8(
-                _mm256_shuffle_epi8(lut_intersection_low, second_low_low),
-                _mm256_shuffle_epi8(lut_intersection_high, second_low_high)
+            __m256i intersection = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_low)
             );
 
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
 
-            intersections_result[i * 2] = _mm256_add_epi8(intersections_result[i * 2], intersection_high);
-            intersections_result[(i * 2) + 1] = _mm256_add_epi8(intersections_result[(i * 2) + 1], intersection_low);
-            unions_result[i] = _mm512_add_epi8(unions_result[i], union_);
-            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
+            unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
         }
     }
     // TODO: Ugly
-    for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512((__m512i *)(unions_tmp + (i * 64)), unions_result[i]);
-    }
     for (size_t i = 0; i < 8; i++) {
         _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
+        _mm256_storeu_si256((__m256i *)(unions_tmp + (i * 32)), unions_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
         distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
