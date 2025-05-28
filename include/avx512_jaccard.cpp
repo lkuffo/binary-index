@@ -53,7 +53,7 @@ enum JaccardKernel {
 
 static uint8_t intersections_tmp[256];
 static uint8_t unions_tmp[256];
-static float distances_tmp[512];
+static float distances_tmp[256];
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 // Comments:
@@ -289,15 +289,15 @@ float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 ///////////////////////////////
 ///////////////////////////////
 
-static uint8_t intersections_tmp_1024_a[512];
-static uint8_t intersections_tmp_1024_b[512];
-static uint8_t intersections_tmp_1024_c[512];
-static uint8_t intersections_tmp_1024_d[512];
+static uint8_t intersections_tmp_1024_a[256];
+static uint8_t intersections_tmp_1024_b[256];
+static uint8_t intersections_tmp_1024_c[256];
+static uint8_t intersections_tmp_1024_d[256];
 
-static uint8_t unions_tmp_1024_a[512];
-static uint8_t unions_tmp_1024_b[512];
-static uint8_t unions_tmp_1024_c[512];
-static uint8_t unions_tmp_1024_d[512];
+static uint8_t unions_tmp_1024_a[256];
+static uint8_t unions_tmp_1024_b[256];
+static uint8_t unions_tmp_1024_c[256];
+static uint8_t unions_tmp_1024_d[256];
 
 //// 1-to-256 vectors
 //// second_vector is a 256*1024 matrix in a column-major layout
@@ -392,15 +392,15 @@ static uint8_t unions_tmp_1024_d[512];
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
 void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m512i intersections_result_a[8];
-    __m512i intersections_result_b[8];
-    __m512i intersections_result_c[8];
-    __m512i intersections_result_d[8];
-    __m512i unions_result_a[8];
-    __m512i unions_result_b[8];
-    __m512i unions_result_c[8];
-    __m512i unions_result_d[8];
-    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 4 _m512i registers)
+    __m512i intersections_result_a[4];
+    __m512i intersections_result_b[4];
+    __m512i intersections_result_c[4];
+    __m512i intersections_result_d[4];
+    __m512i unions_result_a[4];
+    __m512i unions_result_b[4];
+    __m512i unions_result_c[4];
+    __m512i unions_result_d[4];
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
         intersections_result_a[i] = _mm512_setzero_si512();
         intersections_result_b[i] = _mm512_setzero_si512();
         intersections_result_c[i] = _mm512_setzero_si512();
@@ -413,7 +413,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 0 to 31
     for (size_t dim = 0; dim != 32; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
+        for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
             __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
@@ -425,7 +425,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 32 to 63
     for (size_t dim = 32; dim != 64; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
+        for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
             __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
@@ -437,7 +437,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 64 to 95
     for (size_t dim = 64; dim != 96; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
+        for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
             __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
@@ -449,7 +449,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     // Word 96 to 127
     for (size_t dim = 96; dim != 128; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
+        for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
             __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
@@ -459,7 +459,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         }
     }
     // TODO: Ugly
-    for (size_t i = 0; i < 8; i++) {
+    for (size_t i = 0; i < 4; i++) {
         _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
         _mm512_storeu_si512((__m512i *)(unions_tmp_1024_a + (i * 64)), unions_result_a[i]);
         _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
@@ -470,7 +470,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         _mm512_storeu_si512((__m512i *)(unions_tmp_1024_d + (i * 64)), unions_result_d[i]);
     }
     // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
-    for (size_t i = 0; i < 512; i++){
+    for (size_t i = 0; i < 256; i++){
         float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
         float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
         distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
@@ -969,7 +969,7 @@ std::vector<KNNCandidate> jaccard_standalone(
         case JACCARD_U64X16_CSA15_CPP:
             return jaccard_standalone_partial_sort<JACCARD_U64X16_CSA15_CPP, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B1024_VPOPCNTQ_PDX:
-            return jaccard_pdx_standalone_partial_sort<JACCARD_B1024_VPOPCNTQ_PDX, 128, 512>(first_vector, second_vector, num_queries, num_vectors, knn);
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B1024_VPOPCNTQ_PDX, 128, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
 
         case JACCARD_U64X24_C: // 1536
             return jaccard_standalone_partial_sort<JACCARD_U64X24_C, 192>(first_vector, second_vector, num_queries, num_vectors, knn);
