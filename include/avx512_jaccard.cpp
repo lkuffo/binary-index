@@ -469,12 +469,12 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
 //        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
 //        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_d + (i * 64)), unions_result_d[i]);
 //    }
-//    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
-//    for (size_t i = 0; i < 256; i++){
-//        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
-//        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
-//        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
-//    }
+    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
+    for (size_t i = 0; i < 256; i++){
+        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
+        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
+        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
+    }
 }
 
 float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b) {
