@@ -533,6 +533,11 @@ def main(
             "JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX",
             cppyy.gbl.jaccard_b256_vpopcntq_vpshufb_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX
+        ),
+        (
+            "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b1024_vpopcntq_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX
         )
     ]
     standalone_kernels_cpp_pdx_1024d = [
