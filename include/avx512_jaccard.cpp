@@ -416,7 +416,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(second);
             intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
             unions_result_a[i] = _mm512_add_epi8(unions_result_a[i], union_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
@@ -428,7 +428,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(second);
             intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
             unions_result_b[i] = _mm512_add_epi8(unions_result_b[i], union_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
@@ -440,7 +440,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(second);
             intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
             unions_result_c[i] = _mm512_add_epi8(unions_result_c[i], union_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
@@ -452,7 +452,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
             __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(second);
             intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
             unions_result_d[i] = _mm512_add_epi8(unions_result_d[i], union_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
