@@ -957,7 +957,7 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
             } else if constexpr (kernel == JACCARD_U64X16_CSA15_CPP) {
                 current_distance = jaccard_u64x16_csa15_cpp(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED) {
-                current_distance = jaccard_b1024_vpopcntq_precomputed(query, data, query_popcount, precomputed_popcnts[j]);
+                current_distance = jaccard_b1024_vpopcntq_precomputed(query, data, query_popcnt, precomputed_popcnts[j]);
             } else if constexpr (kernel == JACCARD_U64X24_C) { // 1536
                 current_distance = jaccard_u64x24_c(query, data);
             } else if constexpr (kernel == JACCARD_B1536_VPOPCNTQ) {
