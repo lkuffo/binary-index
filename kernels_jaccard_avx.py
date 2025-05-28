@@ -364,7 +364,7 @@ def bench_standalone_pdx(
     if len(vectors) % 256 != 0:
         raise Exception('Number of vectors must be divisible by 256')
 
-    vectors_pdx = row_major_to_pdx(vectors, 256)
+    vectors_pdx = row_major_to_pdx(vectors, 512)
 
     start = time.perf_counter()
     result = cppyy.gbl.jaccard_standalone(
