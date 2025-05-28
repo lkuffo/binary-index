@@ -896,8 +896,6 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
         // Fill all_distances by direct indexing
         size_t global_offset = 0;
         for (size_t j = 0; j < num_vectors; j+=PDX_BLOCK_SIZE) {
-            // TODO: Ugly
-            memset((void*) distances_tmp, 0, PDX_BLOCK_SIZE * sizeof(float));
             if constexpr (kernel == JACCARD_B256_VPOPCNTQ_PDX){
                 jaccard_b256_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PDX){
