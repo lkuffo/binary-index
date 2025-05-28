@@ -372,7 +372,7 @@ def bench_standalone_pdx(
 
     start = time.perf_counter()
     if kernel == cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX:
-        data_popcounts = np.bitwise_count(vectors).sum(axis=0).astype(np.uint32)
+        data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         assert len(data_popcounts) == len(vectors)
         start = time.perf_counter()
         result = cppyy.gbl.jaccard_standalone(
