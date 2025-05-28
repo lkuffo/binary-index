@@ -166,7 +166,7 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 //          SPR   | SHUFFLE: 1 cycle p1,5 - POPCNT: 3 cycles p5
 //                  ...
 //
-void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
