@@ -981,7 +981,7 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 query_popcnt = 0;
                 #pragma unroll
                 for (size_t i = 0; i != N_WORDS; ++i) {
-                    query_popcnt += __builtin_popcount(first_vector[i]);
+                    query_popcnt += __builtin_popcount(query[i]);
                 }
         }
         // Fill all_distances by direct indexing
