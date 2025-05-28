@@ -53,7 +53,7 @@ enum JaccardKernel {
 
 static uint8_t intersections_tmp[256];
 static uint8_t unions_tmp[256];
-static float distances_tmp[256];
+static float distances_tmp[512];
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 // Comments:
@@ -289,15 +289,15 @@ float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 ///////////////////////////////
 ///////////////////////////////
 
-static uint8_t intersections_tmp_1024_a[256];
-static uint8_t intersections_tmp_1024_b[256];
-static uint8_t intersections_tmp_1024_c[256];
-static uint8_t intersections_tmp_1024_d[256];
+static uint8_t intersections_tmp_1024_a[512];
+static uint8_t intersections_tmp_1024_b[512];
+static uint8_t intersections_tmp_1024_c[512];
+static uint8_t intersections_tmp_1024_d[512];
 
-static uint8_t unions_tmp_1024_a[256];
-static uint8_t unions_tmp_1024_b[256];
-static uint8_t unions_tmp_1024_c[256];
-static uint8_t unions_tmp_1024_d[256];
+static uint8_t unions_tmp_1024_a[512];
+static uint8_t unions_tmp_1024_b[512];
+static uint8_t unions_tmp_1024_c[512];
+static uint8_t unions_tmp_1024_d[512];
 
 //// 1-to-256 vectors
 //// second_vector is a 256*1024 matrix in a column-major layout
