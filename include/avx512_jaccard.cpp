@@ -191,24 +191,24 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
             __m256i second_low = _mm256_loadu_epi8((__m256i const*)(second_vector + 32));
 
             // Getting nibbles from data
-            __m256i second_low_low = _mm512_and_epi64(second_low, low_mask);
-            __m256i second_low_high = _mm512_and_epi64(_mm512_srli_epi16(second_low, 4), low_mask);
-            __m256i second_high_low = _mm512_and_epi64(second_low, low_mask);
-            __m256i second_high_high = _mm512_and_epi64(_mm512_srli_epi16(second_low, 4), low_mask);
+            __m256i second_low_low = _mm256_and_epi64(second_low, low_mask);
+            __m256i second_low_high = _mm256_and_epi64(_mm256_srli_epi16(second_low, 4), low_mask);
+            __m256i second_high_low = _mm256_and_epi64(second_low, low_mask);
+            __m256i second_high_high = _mm256_and_epi64(_mm256_srli_epi16(second_low, 4), low_mask);
 
-            __m256i intersection_high = _mm512_add_epi8(
-                _mm512_shuffle_epi8(lut_intersection_low, second_high_low),
-                _mm512_shuffle_epi8(lut_intersection_high, second_high_high)
+            __m256i intersection_high = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_high_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_high_high)
             );
-            __m256i intersection_low = _mm512_add_epi8(
-                _mm512_shuffle_epi8(lut_intersection_low, second_low_low),
-                _mm512_shuffle_epi8(lut_intersection_high, second_low_high)
+            __m256i intersection_low = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_low_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_low_high)
             );
 
             __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
 
-            intersections_result[i * 2] = _mm512_add_epi8(intersections_result[i * 2], intersection_high);
-            intersections_result[(i * 2) + 1] = _mm512_add_epi8(intersections_result[(i * 2) + 1], intersection_low);
+            intersections_result[i * 2] = _mm256_add_epi8(intersections_result[i * 2], intersection_high);
+            intersections_result[(i * 2) + 1] = _mm256_add_epi8(intersections_result[(i * 2) + 1], intersection_low);
             unions_result[i] = _mm512_add_epi8(unions_result[i], union_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
