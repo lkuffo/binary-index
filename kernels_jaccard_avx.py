@@ -169,6 +169,7 @@ enum JaccardKernel {
     JACCARD_U64X16_CSA3_C,
     JACCARD_U64X16_CSA15_CPP,
     JACCARD_B1024_VPOPCNTQ_PDX,
+    JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX,
     // 1536
     JACCARD_U64X24_C,
     JACCARD_B1536_VPOPCNTQ,
@@ -188,6 +189,7 @@ void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
 //
 // 1024 region
@@ -217,7 +219,9 @@ std::vector<KNNCandidate> jaccard_standalone(
     uint8_t const *second_vector,
     size_t num_queries,
     size_t num_vectors,
-    size_t knn);
+    size_t knn,
+    uint32_t const *precomputed_popcnts = nullptr
+);
 
 """)
 
@@ -367,10 +371,18 @@ def bench_standalone_pdx(
     vectors_pdx = row_major_to_pdx(vectors, 256)
 
     start = time.perf_counter()
-    result = cppyy.gbl.jaccard_standalone(
-        kernel,
-        vectors_pdx, queries,
-        len(queries), len(vectors), k)
+    if kernel == cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX:
+        data_popcounts = np.bitwise_count(vectors).sum(axis=0).astype(np.uint32)
+        start = time.perf_counter()
+        result = cppyy.gbl.jaccard_standalone(
+            kernel,
+            vectors_pdx, queries,
+            len(queries), len(vectors), k, data_popcounts)
+    else:
+        result = cppyy.gbl.jaccard_standalone(
+            kernel,
+            vectors_pdx, queries,
+            len(queries), len(vectors), k)
     elapsed_s = time.perf_counter() - start
     matches = []
     for i in range(0, (len(queries) * k), k):

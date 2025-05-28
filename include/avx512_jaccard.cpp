@@ -38,6 +38,7 @@ enum JaccardKernel {
     JACCARD_U64X16_CSA3_C,
     JACCARD_U64X16_CSA15_CPP,
     JACCARD_B1024_VPOPCNTQ_PDX,
+    JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX,
     // 1536
     JACCARD_U64X24_C,
     JACCARD_B1536_VPOPCNTQ,
@@ -477,6 +478,79 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     }
 }
 
+
+// 1-to-256 vectors
+// second_vector is a 256*1024 matrix in a column-major layout
+// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
+void jaccard_b1024_vpopcntq_precomputed_pdx(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const first_popcount, uint32_t const *second_popcounts
+) {
+    __m512i intersections_result_a[4];
+    __m512i intersections_result_b[4];
+    __m512i intersections_result_c[4];
+    __m512i intersections_result_d[4];
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
+        intersections_result_a[i] = _mm512_setzero_si512();
+        intersections_result_b[i] = _mm512_setzero_si512();
+        intersections_result_c[i] = _mm512_setzero_si512();
+        intersections_result_d[i] = _mm512_setzero_si512();
+    }
+    // Word 0 to 31
+    for (size_t dim = 0; dim != 32; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 32 to 63
+    for (size_t dim = 32; dim != 64; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 64 to 95
+    for (size_t dim = 64; dim != 96; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 96 to 127
+    for (size_t dim = 96; dim != 128; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
+    }
+    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
+    for (size_t i = 0; i < 256; i++){
+        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
+        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
+        distances_tmp[i] = (union_ != 0) ? 1 - intersection / (first_popcount + second_popcounts[i] - intersection) : 1.0f;
+    }
+}
+
 float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
 #pragma unroll
@@ -886,13 +960,23 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
     uint8_t const *second_vector,
     size_t num_queries,
     size_t num_vectors,
-    size_t knn
+    size_t knn,
+    uint32_t const *precomputed_popcnts = nullptr
 ) {
     std::vector<KNNCandidate> result(knn * num_queries);
     std::vector<KNNCandidate> all_distances(num_vectors);
     const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
         const uint8_t* data = first_vector;
+        if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX){
+                const uint32_t* precomputed_popcnts_data = precomputed_popcnts;
+                // Simple popcount for query
+                uint32_t query_popcnt = 0;
+                #pragma unroll
+                for (size_t i = 0; i != N_WORDS; ++i) {
+                    query_popcnt += __builtin_popcount(first_vector[i]);
+                }
+        }
         // Fill all_distances by direct indexing
         size_t global_offset = 0;
         for (size_t j = 0; j < num_vectors; j+=PDX_BLOCK_SIZE) {
@@ -904,6 +988,8 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 jaccard_b256_vpshufb_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX){
                 jaccard_b256_vpopcntq_vpshufb_pdx(query, data);
+            } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX){
+                jaccard_b1024_vpopcntq_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data)
             }
             // TODO: Ugly
             for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
@@ -912,6 +998,9 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 global_offset++;
             }
             data += N_WORDS * PDX_BLOCK_SIZE;
+            if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX){
+                precomputed_popcnts_data += PDX_BLOCK_SIZE;
+            }
         }
 
         // Partial sort to get top-k
@@ -936,7 +1025,8 @@ std::vector<KNNCandidate> jaccard_standalone(
     uint8_t const *second_vector,
     size_t num_queries,
     size_t num_vectors,
-    size_t knn
+    size_t knn,
+    uint32_t const *precomputed_popcnts = nullptr
 ) {
     switch (kernel) {
         case JACCARD_U64X4_C: // 256
@@ -968,6 +1058,8 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_standalone_partial_sort<JACCARD_U64X16_CSA15_CPP, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B1024_VPOPCNTQ_PDX:
             return jaccard_pdx_standalone_partial_sort<JACCARD_B1024_VPOPCNTQ_PDX, 128, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX:
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX, 128, 256>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
 
         case JACCARD_U64X24_C: // 1536
             return jaccard_standalone_partial_sort<JACCARD_U64X24_C, 192>(first_vector, second_vector, num_queries, num_vectors, knn);
