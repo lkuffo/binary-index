@@ -534,18 +534,18 @@ def main(
             cppyy.gbl.jaccard_b256_vpopcntq_vpshufb_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX
         ),
-        (
-            "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX",
-            cppyy.gbl.jaccard_b1024_vpopcntq_precomputed_pdx,
-            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX
-        )
     ]
     standalone_kernels_cpp_pdx_1024d = [
         (
             "JACCARD_B1024_VPOPCNTQ_PDX",
             cppyy.gbl.jaccard_b1024_vpopcntq_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PDX
-        )
+        ),
+        (
+            "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b1024_vpopcntq_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX
+        ),
     ]
 
     # Group kernels by dimension:
