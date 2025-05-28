@@ -483,6 +483,11 @@ def main(
             cppyy.gbl.jaccard_b1024_vpopcntq,
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ
         ),
+        (
+            "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED",
+            cppyy.gbl.jaccard_b1024_vpopcntq_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED
+        ),
         # (
         #     "JACCARD_B1024_VPSHUFB_SAD",
         #     cppyy.gbl.jaccard_b1024_vpshufb_sad,
@@ -520,11 +525,6 @@ def main(
             "JACCARD_B1536_VPOPCNTQ",
             cppyy.gbl.jaccard_b1536_vpopcntq,
             cppyy.gbl.JaccardKernel.JACCARD_B1536_VPOPCNTQ
-        ),
-        (
-            "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED",
-            cppyy.gbl.jaccard_b1024_vpopcntq_precomputed,
-            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED
         ),
         (
             "JACCARD_B1536_VPOPCNTQ_3CSA",
