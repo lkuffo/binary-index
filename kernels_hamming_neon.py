@@ -399,6 +399,7 @@ def main(
             query_count=query_count
         )
         print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+        print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
         print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         for name, _, kernel_id in kernels_cpp:
