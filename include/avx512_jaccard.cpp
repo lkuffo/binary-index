@@ -968,10 +968,12 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
     const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
         const uint8_t* data = first_vector;
+        const uint32_t* precomputed_popcnts_data;
+        uint32_t query_popcnt;
         if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX){
-                const uint32_t* precomputed_popcnts_data = precomputed_popcnts;
+                precomputed_popcnts_data = precomputed_popcnts;
                 // Simple popcount for query
-                uint32_t query_popcnt = 0;
+                query_popcnt = 0;
                 #pragma unroll
                 for (size_t i = 0; i != N_WORDS; ++i) {
                     query_popcnt += __builtin_popcount(first_vector[i]);
@@ -989,7 +991,7 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
             } else if constexpr (kernel == JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX){
                 jaccard_b256_vpopcntq_vpshufb_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX){
-                jaccard_b1024_vpopcntq_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data)
+                jaccard_b1024_vpopcntq_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data);
             }
             // TODO: Ugly
             for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
