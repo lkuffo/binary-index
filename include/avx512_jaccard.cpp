@@ -7,6 +7,7 @@
 #include <immintrin.h>
 
 #include "jaccard_byte_luts.h"
+#include "jaccard_byte_luts_optimized.h"
 #include "jaccard_nibble_luts_avx2.h"
 #include "jaccard_nibble_luts_avx512.h"
 
@@ -214,12 +215,12 @@ void jaccard_b256_vpshufb_precomputed_pdx(
         intersections_result[i] = _mm256_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
-        //uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
-        //uint8_t first_low = first_vector[dim] & 0x0F;
+        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+        uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
-        __m256i lut_intersection_high = m256_intersection_lookup_tables[1];
-        __m256i lut_intersection_low = m256_intersection_lookup_tables[0];
+        __m256i lut_intersection_high = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_high]));
+        __m256i lut_intersection_low  = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_low]));
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
