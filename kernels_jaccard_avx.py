@@ -159,8 +159,9 @@ enum JaccardKernel {
     JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B256_VPOPCNTQ,
     JACCARD_B256_VPOPCNTQ_PRECOMPUTED,
+    JACCARD_B256_VPOPCNTQ_VPSHUFB, // TODO
     JACCARD_B256_VPOPCNTQ_PDX,
-    JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX, 
+    JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B256_VPSHUFB_PDX,
     JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX,
     JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX,
@@ -182,12 +183,13 @@ enum JaccardKernel {
     JACCARD_B1024_VPSHUFB_SAD,
     JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B1024_VPSHUFB_DPB,
+    JACCARD_B1024_VPOPCNTQ_VPSHUFB, // TODO
     JACCARD_U64X16_CSA3_C,
     JACCARD_U64X16_CSA15_CPP,
     JACCARD_B1024_VPOPCNTQ_PDX,
     JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B1024_VPOPCNTQ_VPSHUFB_PDX,
-    JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX, // TODO
+    JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX,
     // 1536
     JACCARD_U64X24_C,
     JACCARD_B1536_VPOPCNTQ,
@@ -239,6 +241,8 @@ __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1024_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1024_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+void jaccard_b1024_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const *second_popcounts);
+
 
 //
 // 1536 region
@@ -629,6 +633,11 @@ def main(
             cppyy.gbl.jaccard_b1024_vpopcntq_precomputed_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX
         ),
+        (
+            "JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b1024_vpshufb_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX
+        )
     ]
 
     # Group kernels by dimension:
