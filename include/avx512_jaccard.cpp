@@ -73,6 +73,12 @@ enum JaccardKernel {
 static uint8_t intersections_tmp[256];
 static uint8_t unions_tmp[256];
 static float distances_tmp[256];
+
+static uint8_t intersections_tmp_512_a[256];
+static uint8_t intersections_tmp_512_b[256];
+static uint8_t intersections_tmp_512_c[256];
+static uint8_t intersections_tmp_512_d[256];
+
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 // Comments:
@@ -431,11 +437,6 @@ static uint8_t intersections_tmp_1024_a[256];
 static uint8_t intersections_tmp_1024_b[256];
 static uint8_t intersections_tmp_1024_c[256];
 static uint8_t intersections_tmp_1024_d[256];
-
-static uint8_t intersections_tmp_512_a[256];
-static uint8_t intersections_tmp_512_b[256];
-static uint8_t intersections_tmp_512_c[256];
-static uint8_t intersections_tmp_512_d[256];
 
 static uint8_t unions_tmp_1024_a[256];
 static uint8_t unions_tmp_1024_b[256];
