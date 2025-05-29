@@ -1127,7 +1127,7 @@ std::vector<KNNCandidate> jaccard_standalone(
         case JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX:
             return jaccard_pdx_standalone_partial_sort<JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED:
-            return jaccard_pdx_standalone_partial_sort<JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED, 32>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
+            return jaccard_standalone_partial_sort<JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED, 32>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
 
         case JACCARD_U8X128_C: // 1024
             return jaccard_standalone_partial_sort<JACCARD_U8X128_C, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
