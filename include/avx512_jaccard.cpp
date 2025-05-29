@@ -224,7 +224,7 @@ void jaccard_b256_vpshufb_precomputed_pdx(
 //        volatile uint8_t table_idx_1 = 0;
 //        volatile uint8_t table_idx_2 = 1;
         __m256i lut_intersection_high = m256_intersection_lookup_tables[0];
-        __m256i lut_intersection_low = m256_intersection_lookup_tables[2];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[5];
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
