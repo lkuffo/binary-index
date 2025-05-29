@@ -219,8 +219,11 @@ void jaccard_b256_vpshufb_precomputed_pdx(
         uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
-        __m256i lut_intersection_high = m256_intersection_lookup_tables[0];
-        __m256i lut_intersection_low = m256_intersection_lookup_tables[1];
+        // If I always use the same lookup tables performance goes up by 60% when data fits in L1
+        // and by <5% when data doesn't fit in L1
+        // 512 bytes is too high for the lookup table to be efficient
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
