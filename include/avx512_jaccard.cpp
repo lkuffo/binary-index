@@ -242,9 +242,10 @@ void jaccard_b256_vpshufb_precomputed_pdx(
             intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
 
             second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-            if i == 6:
+            if (i == 6){
                 __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_high], 0, 3);
                 __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_low], 0, 3);
+            }
         }
     }
     // TODO: Ugly
