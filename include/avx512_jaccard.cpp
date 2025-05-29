@@ -822,8 +822,6 @@ float jaccard_b1024_vpshufb_sad_precomputed(
 
     __m512i intersection_start = _mm512_and_epi64(first_start, second_start);
     __m512i intersection_end = _mm512_and_epi64(first_end, second_end);
-    __m512i union_start = _mm512_or_epi64(first_start, second_start);
-    __m512i union_end = _mm512_or_epi64(first_end, second_end);
 
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i lookup = _mm512_set_epi8(
@@ -837,10 +835,6 @@ float jaccard_b1024_vpshufb_sad_precomputed(
     __m512i intersection_end_low = _mm512_and_si512(intersection_end, low_mask);
     __m512i intersection_end_high = _mm512_and_si512(_mm512_srli_epi16(intersection_end, 4), low_mask);
 
-    __m512i union_start_low = _mm512_and_si512(union_start, low_mask);
-    __m512i union_start_high = _mm512_and_si512(_mm512_srli_epi16(union_start, 4), low_mask);
-    __m512i union_end_low = _mm512_and_si512(union_end, low_mask);
-    __m512i union_end_high = _mm512_and_si512(_mm512_srli_epi16(union_end, 4), low_mask);
 
     __m512i intersection_start_popcount = _mm512_add_epi8(
         _mm512_shuffle_epi8(lookup, intersection_start_low),
@@ -848,21 +842,14 @@ float jaccard_b1024_vpshufb_sad_precomputed(
     __m512i intersection_end_popcount = _mm512_add_epi8(
         _mm512_shuffle_epi8(lookup, intersection_end_low),
         _mm512_shuffle_epi8(lookup, intersection_end_high));
-    __m512i union_start_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, union_start_low),
-        _mm512_shuffle_epi8(lookup, union_start_high));
-    __m512i union_end_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, union_end_low),
-        _mm512_shuffle_epi8(lookup, union_end_high));
 
-    __m512i intersection = _mm512_add_epi64(
+    __m512i intersection_ = _mm512_add_epi64(
         _mm512_sad_epu8(intersection_start_popcount, _mm512_setzero_si512()),
         _mm512_sad_epu8(intersection_end_popcount, _mm512_setzero_si512()));
-    __m512i union_ = _mm512_add_epi64(
-        _mm512_sad_epu8(union_start_popcount, _mm512_setzero_si512()),
-        _mm512_sad_epu8(union_end_popcount, _mm512_setzero_si512()));
 
-    return 1.f - (_mm512_reduce_add_epi64(intersection) + 1.f) / (_mm512_reduce_add_epi64(union_) + 1.f);
+    auto intersection = _mm512_reduce_add_epi64(intersection_);
+    float denominator = first_popcount + second_popcount - intersection;
+    return (denominator != 0) ? 1 - intersection / denominator : 1.0f;
 }
 
 // # Define the AVX-512 variant using the `vpshufb` and `vpdpbusd` instruction.
