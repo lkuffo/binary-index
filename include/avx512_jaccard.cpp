@@ -219,10 +219,8 @@ void jaccard_b256_vpshufb_precomputed_pdx(
         uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
-//        __m256i lut_intersection_high = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[0]));
-//        __m256i lut_intersection_low  = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[1]));
-        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
-        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[0];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[1];
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
@@ -281,8 +279,8 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
         uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
-        __m256i lut_intersection_high = m256_intersection_lookup_tables[0];
-        __m256i lut_intersection_low = m256_intersection_lookup_tables[1];
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
