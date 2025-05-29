@@ -243,12 +243,12 @@ void jaccard_b256_vpshufb_precomputed_pdx(
 //                _mm256_shuffle_epi8(lut_intersection_low, second_low),
 //                _mm256_shuffle_epi8(lut_intersection_high, second_high)
 //            );
-            __m256i intersection = _mm256_add_epi8(
+            __m256i intersection_ = _mm256_add_epi8(
                 _mm256_shuffle_epi8(popcnt_lookup, second_low),
                 _mm256_shuffle_epi8(popcnt_lookup, second_high)
             );
 
-            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
+            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection_);
 
             second_vector += 32; // 256x8-bit values (using 8 registers at a time)
         }
