@@ -158,9 +158,9 @@ enum JaccardKernel {
     JACCARD_B256_VPSHUFB_SAD,
     JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B256_VPOPCNTQ,
-    JACCARD_B256_VPOPCNTQ_PRECOMPUTED, // TODO
+    JACCARD_B256_VPOPCNTQ_PRECOMPUTED,
     JACCARD_B256_VPOPCNTQ_PDX,
-    JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX, // TODO
+    JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX, 
     JACCARD_B256_VPSHUFB_PDX,
     JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX, // TODO
     JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX,
@@ -223,7 +223,7 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
-
+void jaccard_b256_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
 //
 // 1024 region
@@ -595,6 +595,11 @@ def main(
             cppyy.gbl.jaccard_b256_vpopcntq_vpshufb_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX
         ),
+        (
+            "JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b256_vpopcntq_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX
+        )
     ]
     standalone_kernels_cpp_pdx_1024d = [
         (
