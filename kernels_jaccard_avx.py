@@ -156,21 +156,38 @@ enum JaccardKernel {
     // 256
     JACCARD_U64X4_C,
     JACCARD_B256_VPSHUFB_SAD,
+    JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B256_VPOPCNTQ,
+    JACCARD_B256_VPOPCNTQ_PRECOMPUTED, // TODO
     JACCARD_B256_VPOPCNTQ_PDX,
+    JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX, // TODO
     JACCARD_B256_VPSHUFB_PDX,
+    JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX, // TODO
     JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX,
+    // 512
+    JACCARD_B512_VPSHUFB_SAD, // TODO
+    JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED, // TODO
+    JACCARD_B512_VPOPCNTQ, // TODO
+    JACCARD_B512_VPOPCNTQ_PRECOMPUTED, // TODO
+    JACCARD_B512_VPOPCNTQ_PDX, // TODO
+    JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX, // TODO
+    JACCARD_B512_VPSHUFB_PDX, // TODO
+    JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX, // TODO
+    JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, // TODO
     // 1024
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
     JACCARD_B1024_VPOPCNTQ,
     JACCARD_B1024_VPOPCNTQ_PRECOMPUTED,
     JACCARD_B1024_VPSHUFB_SAD,
+    JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED, // TODO
     JACCARD_B1024_VPSHUFB_DPB,
     JACCARD_U64X16_CSA3_C,
     JACCARD_U64X16_CSA15_CPP,
     JACCARD_B1024_VPOPCNTQ_PDX,
     JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX,
+    JACCARD_B1024_VPOPCNTQ_VPSHUFB_PDX, // TODO
+    JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX // TODO
     // 1536
     JACCARD_U64X24_C,
     JACCARD_B1536_VPOPCNTQ,
@@ -321,13 +338,14 @@ def bench_standalone(
         vectors: np.ndarray,
         k: int,
         kernel=cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ,
-        query_count: int = 1000
+        query_count: int = 1000,
+        kernel_name: str = "",
 ) -> dict:
     queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
 
     start = time.perf_counter()
-    if kernel == cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED:
+    if "PRECOMPUTED" in kernel_name:
         data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         assert len(data_popcounts) == len(vectors)
         start = time.perf_counter()
@@ -376,7 +394,8 @@ def bench_standalone_pdx(
         vectors: np.ndarray,
         k: int,
         kernel,
-        query_count: int = 1000
+        query_count: int = 1000,
+        kernel_name: str = ""
 ) -> dict:
     queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
@@ -387,7 +406,7 @@ def bench_standalone_pdx(
     vectors_pdx = row_major_to_pdx(vectors, 256)
 
     start = time.perf_counter()
-    if kernel == cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX:
+    if "PRECOMPUTED" in kernel_name:
         data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         assert len(data_popcounts) == len(vectors)
         start = time.perf_counter()
@@ -488,11 +507,16 @@ def main(
             cppyy.gbl.jaccard_b1024_vpopcntq_precomputed,
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED
         ),
-        # (
-        #     "JACCARD_B1024_VPSHUFB_SAD",
-        #     cppyy.gbl.jaccard_b1024_vpshufb_sad,
-        #     cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_SAD
-        # ),
+        (
+            "JACCARD_B1024_VPSHUFB_SAD",
+            cppyy.gbl.jaccard_b1024_vpshufb_sad,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_SAD
+        ),
+        (
+            "JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED",
+            cppyy.gbl.jaccard_b256_vpshufb_sad_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED
+        )
         # (
         #     "JACCARD_B1024_VPSHUFB_DPB",
         #     cppyy.gbl.jaccard_b1024_vpshufb_dpb,
@@ -630,14 +654,14 @@ def main(
         # Analyze all the kernels:
         for name, _, kernel_id in kernels_cpp:
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
-            stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count)
+            stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         for name, _, kernel_id in kernels_cpp_pdx:
             print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
-            stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count)
+            stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
