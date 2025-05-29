@@ -7,7 +7,7 @@
 #include <immintrin.h>
 
 #include "jaccard_byte_luts.h"
-#include "jaccard_byte_luts_optimized.h"
+#include "jaccard_nibble_luts_optimized.h"
 #include "jaccard_nibble_luts_avx2.h"
 #include "jaccard_nibble_luts_avx512.h"
 
