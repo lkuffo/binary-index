@@ -27,7 +27,7 @@ enum JaccardKernel {
     JACCARD_B256_VPSHUFB_SAD,
     JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B256_VPOPCNTQ,
-    JACCARD_B256_VPOPCNTQ_PRECOMPUTED, // TODO
+    JACCARD_B256_VPOPCNTQ_PRECOMPUTED,
     JACCARD_B256_VPOPCNTQ_PDX,
     JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX, // TODO
     JACCARD_B256_VPSHUFB_PDX,
@@ -325,6 +325,21 @@ float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
     __m256i intersection = _mm256_popcnt_epi64(_mm256_and_epi64(first, second));
     __m256i union_ = _mm256_popcnt_epi64(_mm256_or_epi64(first, second));
     return 1.f - (_mm256_reduce_add_epi64(intersection) + 1.f) / (_mm256_reduce_add_epi64(union_) + 1.f);
+}
+
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b256_vpopcntq_precomputed(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const first_popcount, uint32_t const second_popcount
+) {
+    __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
+    __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+
+    __m256i intersection = _mm256_popcnt_epi64(_mm256_and_epi64(first, second));
+
+    auto intersection_result = _mm256_reduce_add_epi64(intersection);
+    float denominator = first_popcount + second_popcount - intersection_result;
+    return (denominator != 0) ? 1 - intersection_result / denominator : 1.0f;
 }
 
 
@@ -969,7 +984,8 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
         uint32_t query_popcnt;
         if constexpr (
             kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED ||
-            kernel == JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED
+            kernel == JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED ||
+            kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED
         ){
                 // Simple popcount for query
                 query_popcnt = 0;
@@ -990,6 +1006,9 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
                 current_distance = jaccard_b256_vpopcntq(query, data);
             } else if constexpr (kernel == JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED){
                 current_distance = jaccard_b256_vpshufb_sad_precomputed(query, data, query_popcnt, precomputed_popcnts[j]);
+            } else if constexpr (kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED) {
+                current_distance = jaccard_b256_vpopcntq_precomputed(query, data, query_popcnt, precomputed_popcnts[j]);
+            }
 
             } else if constexpr (kernel == JACCARD_U8X128_C) { // 1024
                 current_distance = jaccard_u8x128_c(query, data);
@@ -1128,6 +1147,8 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_pdx_standalone_partial_sort<JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED:
             return jaccard_standalone_partial_sort<JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED, 32>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
+        case JACCARD_B256_VPOPCNTQ_PRECOMPUTED:
+            return jaccard_standalone_partial_sort<JACCARD_B256_VPOPCNTQ_PRECOMPUTED, 32>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
 
         case JACCARD_U8X128_C: // 1024
             return jaccard_standalone_partial_sort<JACCARD_U8X128_C, 128>(first_vector, second_vector, num_queries, num_vectors, knn);

@@ -212,6 +212,11 @@ float jaccard_b256_vpshufb_sad_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 );
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b256_vpopcntq_precomputed(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const first_popcount, uint32_t const second_popcount
+);
 
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
@@ -468,6 +473,11 @@ def main(
             "JACCARD_B256_VPOPCNTQ",
             cppyy.gbl.jaccard_b256_vpopcntq,
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ
+        ),
+        (
+            "JACCARD_B256_VPOPCNTQ_PRECOMPUTED",
+            cppyy.gbl.jaccard_b256_vpopcntq_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B256_VPOPCNTQ_PRECOMPUTED
         ),
         (
             "JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED",
