@@ -312,7 +312,7 @@ float jaccard_b256_vpshufb_sad_precomputed(
 
     auto intersection_result = _mm256_reduce_add_epi64(intersection_);
     float denominator = first_popcount + second_popcount - intersection_result;
-    return (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+    return (denominator != 0) ? 1 - intersection_result / denominator : 1.0f;
 };
 
 // Define the AVX-512 variant using the `vpopcntq` instruction.
