@@ -218,6 +218,11 @@ void jaccard_b256_vpshufb_precomputed_pdx(
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
         uint8_t first_low = first_vector[dim] & 0x0F;
 
+        uint8_t next_dim_high = (first_vector[dim+1] & 0xF0) >> 4;
+        uint8_t next_dim_low = first_vector[dim+1] & 0x0F;
+        __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_high], 0, 3);
+        __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_low], 0, 3);
+
         // Choose lookup tables
 //        __m256i lut_intersection_high = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[0]));
 //        __m256i lut_intersection_low  = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[1]));
