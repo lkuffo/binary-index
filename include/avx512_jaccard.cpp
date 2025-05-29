@@ -56,7 +56,7 @@ enum JaccardKernel {
     JACCARD_B1024_VPOPCNTQ_PDX,
     JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B1024_VPOPCNTQ_VPSHUFB_PDX, // TODO
-    JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX // TODO
+    JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX, // TODO
     // 1536
     JACCARD_U64X24_C,
     JACCARD_B1536_VPOPCNTQ,
@@ -291,7 +291,7 @@ float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 __attribute__((target("avx2,bmi2,avx")))
 float jaccard_b256_vpshufb_sad_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
-    uint32_t const first_popcount, uint32_t const *second_popcounts
+    uint32_t const first_popcount, uint32_t const second_popcount
 ) {
     __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
@@ -310,8 +310,8 @@ float jaccard_b256_vpshufb_sad_precomputed(
         _mm256_shuffle_epi8(lookup, intersection_low),
         _mm256_shuffle_epi8(lookup, intersection_high));
 
-    auto intersection = _mm512_reduce_add_epi64(intersection_);
-    float denominator = popcount_first + popcount_second - intersection;
+    auto intersection_result = _mm256_reduce_add_epi64(intersection_);
+    float denominator = first_popcount + second_popcount - intersection_result;
     return (denominator != 0) ? 1 - intersection / denominator : 1.0f;
 };
 
@@ -640,7 +640,7 @@ float jaccard_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1024_vpopcntq_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
-    uint32_t const popcount_first, uint32_t const popcount_second
+    uint32_t const first_popcount, uint32_t const second_popcount
 ) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
@@ -653,7 +653,7 @@ float jaccard_b1024_vpopcntq_precomputed(
     __m512i intersection_ = _mm512_add_epi64(intersection_start, intersection_end);
 
     auto intersection = _mm512_reduce_add_epi64(intersection_);
-    float denominator = popcount_first + popcount_second - intersection;
+    float denominator = first_popcount + second_popcount - intersection;
     return (denominator != 0) ? 1 - intersection / denominator : 1.0f;
 }
 
