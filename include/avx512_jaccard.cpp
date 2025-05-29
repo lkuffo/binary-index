@@ -215,7 +215,7 @@ void jaccard_b256_vpshufb_precomputed_pdx(
     }
     for (size_t dim = 0; dim != 32; dim++){
         //uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
-        uint8_t first_low = first_vector[dim] & 0x0F;
+        //uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
         __m256i lut_intersection_high = m256_intersection_lookup_tables[1];
@@ -232,8 +232,6 @@ void jaccard_b256_vpshufb_precomputed_pdx(
                 _mm256_shuffle_epi8(lut_intersection_low, second_low),
                 _mm256_shuffle_epi8(lut_intersection_high, second_high)
             );
-
-//            __m256i intersection = _mm256_shuffle_epi8(lut_intersection_low, second_low);
 
             intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
 
