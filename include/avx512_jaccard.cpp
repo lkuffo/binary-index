@@ -204,99 +204,39 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 }
 
 
-//void jaccard_b256_vpshufb_precomputed_pdx(
-//    uint8_t const *first_vector, uint8_t const *second_vector,
-//    uint32_t const first_popcount, uint32_t const *second_popcounts
-//) {
-//    __m256i low_mask = _mm256_set1_epi8(0x0f);
-//    __m256i intersections_result[8];
-//    // Load initial values
-//    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
-//        intersections_result[i] = _mm256_set1_epi8(0);
-//    }
-//    for (size_t dim = 0; dim != 32; dim++){
-//        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
-//        uint8_t first_low = first_vector[dim] & 0x0F;
-//
-//        // Choose lookup tables
-////        __m256i lut_intersection_high = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_high]));
-////        __m256i lut_intersection_low  = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_low]));
-//        __m256i lut_intersection_high = m256_intersection_lookup_tables[0];
-//        __m256i lut_intersection_low = m256_intersection_lookup_tables[1];
-//
-//        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
-//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-//
-//            // Getting nibbles from data
-//            __m256i second_low = _mm256_and_si256(second, low_mask);
-//            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
-//
-//            __m256i intersection = _mm256_add_epi8(
-//                _mm256_shuffle_epi8(lut_intersection_low, second_low),
-//                _mm256_shuffle_epi8(lut_intersection_high, second_high)
-//            );
-//
-//            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
-//
-//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-//        }
-//    }
-//    // TODO: Ugly
-//    for (size_t i = 0; i < 8; i++) {
-//        _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
-//    }
-//    for (size_t i = 0; i < 256; i++){
-//        float intersection = (float)intersections_tmp[i];
-//        float denominator = first_popcount + second_popcounts[i] - intersection;
-//        distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
-//    }
-//}
-
 void jaccard_b256_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
-    __m256i popcnt_lookup = _mm256_set_epi8(
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
     __m256i intersections_result[8];
     // Load initial values
     for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
         intersections_result[i] = _mm256_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
-//        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
-//        uint8_t first_low = first_vector[dim] & 0x0F;
-        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+        uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
 //        __m256i lut_intersection_high = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_high]));
 //        __m256i lut_intersection_low  = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_low]));
-//        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
-//        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[0];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[1];
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
-            __m256i intersection = _mm256_and_epi64(first, second);
-
             // Getting nibbles from data
-//            __m256i second_low = _mm256_and_si256(second, low_mask);
-//            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
-            __m256i second_low = _mm256_and_si256(intersection, low_mask);
-            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(intersection, 4), low_mask);
+            __m256i second_low = _mm256_and_si256(second, low_mask);
+            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
 
-//            __m256i intersection = _mm256_add_epi8(
-//                _mm256_shuffle_epi8(lut_intersection_low, second_low),
-//                _mm256_shuffle_epi8(lut_intersection_high, second_high)
-//            );
-            __m256i intersection_ = _mm256_add_epi8(
-                _mm256_shuffle_epi8(popcnt_lookup, second_low),
-                _mm256_shuffle_epi8(popcnt_lookup, second_high)
+            __m256i intersection = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_high)
             );
 
-            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection_);
+            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
 
             second_vector += 32; // 256x8-bit values (using 8 registers at a time)
         }
@@ -311,6 +251,66 @@ void jaccard_b256_vpshufb_precomputed_pdx(
         distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
     }
 }
+
+//void jaccard_b256_vpshufb_precomputed_pdx(
+//    uint8_t const *first_vector, uint8_t const *second_vector,
+//    uint32_t const first_popcount, uint32_t const *second_popcounts
+//) {
+//    __m256i low_mask = _mm256_set1_epi8(0x0f);
+//    __m256i popcnt_lookup = _mm256_set_epi8(
+//        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+//        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+//    __m256i intersections_result[8];
+//    // Load initial values
+//    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
+//        intersections_result[i] = _mm256_set1_epi8(0);
+//    }
+//    for (size_t dim = 0; dim != 32; dim++){
+////        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+////        uint8_t first_low = first_vector[dim] & 0x0F;
+//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+//
+//        // Choose lookup tables
+////        __m256i lut_intersection_high = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_high]));
+////        __m256i lut_intersection_low  = _mm256_loadu_epi8((__m256i const*)(&static_intersection_lookup_tables[first_low]));
+////        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+////        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+//
+//        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
+//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+//
+//            __m256i intersection = _mm256_and_epi64(first, second);
+//
+//            // Getting nibbles from data
+////            __m256i second_low = _mm256_and_si256(second, low_mask);
+////            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
+//            __m256i second_low = _mm256_and_si256(intersection, low_mask);
+//            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(intersection, 4), low_mask);
+//
+////            __m256i intersection = _mm256_add_epi8(
+////                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+////                _mm256_shuffle_epi8(lut_intersection_high, second_high)
+////            );
+//            __m256i intersection_ = _mm256_add_epi8(
+//                _mm256_shuffle_epi8(popcnt_lookup, second_low),
+//                _mm256_shuffle_epi8(popcnt_lookup, second_high)
+//            );
+//
+//            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection_);
+//
+//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+//        }
+//    }
+//    // TODO: Ugly
+//    for (size_t i = 0; i < 8; i++) {
+//        _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
+//    }
+//    for (size_t i = 0; i < 256; i++){
+//        float intersection = (float)intersections_tmp[i];
+//        float denominator = first_popcount + second_popcounts[i] - intersection;
+//        distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+//    }
+//}
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
