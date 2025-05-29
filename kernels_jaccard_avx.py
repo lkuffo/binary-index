@@ -180,7 +180,7 @@ enum JaccardKernel {
     JACCARD_B1024_VPOPCNTQ,
     JACCARD_B1024_VPOPCNTQ_PRECOMPUTED,
     JACCARD_B1024_VPSHUFB_SAD,
-    JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED, // TODO
+    JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B1024_VPSHUFB_DPB,
     JACCARD_U64X16_CSA3_C,
     JACCARD_U64X16_CSA15_CPP,
@@ -202,11 +202,6 @@ __attribute__((target("avx2,bmi2,avx")))
 float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpopcntq_precomputed(
-    uint8_t const *first_vector, uint8_t const *second_vector,
-    uint32_t const popcount_first, uint32_t const popcount_second
-);
 __attribute__((target("avx2,bmi2,avx")))
 float jaccard_b256_vpshufb_sad_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
@@ -238,6 +233,11 @@ __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1024_vpshufb_dpb(uint8_t const *first_vector, uint8_t const *second_vector);
 float jaccard_u64x16_csa3_c(uint8_t const *a, uint8_t const *b);
 float jaccard_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b);
+
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b1024_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b1024_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
 
 //
 // 1536 region
@@ -533,6 +533,11 @@ def main(
         #     cppyy.gbl.jaccard_b1024_vpshufb_sad,
         #     cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_SAD
         # ),
+        (
+            "JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED",
+            cppyy.gbl.jaccard_b1024_vpshufb_sad_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED
+        ),
         # (
         #     "JACCARD_B1024_VPSHUFB_DPB",
         #     cppyy.gbl.jaccard_b1024_vpshufb_dpb,
