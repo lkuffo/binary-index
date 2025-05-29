@@ -227,9 +227,6 @@ void jaccard_b256_vpshufb_precomputed_pdx(
         __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
         __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
 
-        __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_high], 0, 3);
-        __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_low], 0, 3);
-
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
@@ -245,6 +242,9 @@ void jaccard_b256_vpshufb_precomputed_pdx(
             intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
 
             second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+            if i == 6:
+                __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_high], 0, 3);
+                __builtin_prefetch(&m256_intersection_lookup_tables[next_dim_low], 0, 3);
         }
     }
     // TODO: Ugly
