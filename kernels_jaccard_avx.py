@@ -464,11 +464,11 @@ def main(
             cppyy.gbl.jaccard_u64x4_c,
             cppyy.gbl.JaccardKernel.JACCARD_U64X4_C
         ),
-        # (
-        #     "JACCARD_B256_VPSHUFB_SAD",
-        #     cppyy.gbl.jaccard_b256_vpshufb_sad,
-        #     cppyy.gbl.JaccardKernel.JACCARD_B256_VPSHUFB_SAD
-        # ),
+        (
+            "JACCARD_B256_VPSHUFB_SAD",
+            cppyy.gbl.jaccard_b256_vpshufb_sad,
+            cppyy.gbl.JaccardKernel.JACCARD_B256_VPSHUFB_SAD
+        ),
         (
             "JACCARD_B256_VPOPCNTQ",
             cppyy.gbl.jaccard_b256_vpopcntq,

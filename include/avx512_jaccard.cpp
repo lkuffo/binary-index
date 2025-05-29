@@ -1008,7 +1008,7 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
                 current_distance = jaccard_b256_vpshufb_sad_precomputed(query, data, query_popcnt, precomputed_popcnts[j]);
             } else if constexpr (kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED) {
                 current_distance = jaccard_b256_vpopcntq_precomputed(query, data, query_popcnt, precomputed_popcnts[j]);
-                
+
             } else if constexpr (kernel == JACCARD_U8X128_C) { // 1024
                 current_distance = jaccard_u8x128_c(query, data);
             } else if constexpr (kernel == JACCARD_U64X16_C) {
