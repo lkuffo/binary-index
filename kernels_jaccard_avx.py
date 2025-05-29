@@ -207,6 +207,11 @@ float jaccard_b1024_vpopcntq_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const popcount_first, uint32_t const popcount_second
 );
+__attribute__((target("avx2,bmi2,avx")))
+float jaccard_b256_vpshufb_sad_precomputed(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const first_popcount, uint32_t const second_popcount
+);
 
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
