@@ -382,12 +382,25 @@ def bench_standalone(
     if "PRECOMPUTED" in kernel_name:
         data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         assert len(data_popcounts) == len(vectors)
+        # Warmup
+        for i in range(5):
+            result = cppyy.gbl.jaccard_standalone(
+                kernel,
+                vectors, queries,
+                len(queries), len(vectors), k, data_popcounts)
         start = time.perf_counter()
         result = cppyy.gbl.jaccard_standalone(
             kernel,
             vectors, queries,
             len(queries), len(vectors), k, data_popcounts)
     else:
+        # Warmup
+        for i in range(5):
+            result = cppyy.gbl.jaccard_standalone(
+                kernel,
+                vectors, queries,
+                len(queries), len(vectors), k)
+        start = time.perf_counter()
         result = cppyy.gbl.jaccard_standalone(
             kernel,
             vectors, queries,
@@ -444,12 +457,25 @@ def bench_standalone_pdx(
     if "PRECOMPUTED" in kernel_name:
         data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         assert len(data_popcounts) == len(vectors)
+        # Warmup
+        for i in range(5):
+            result = cppyy.gbl.jaccard_standalone(
+                kernel,
+                vectors_pdx, queries,
+                len(queries), len(vectors), k, data_popcounts)
         start = time.perf_counter()
         result = cppyy.gbl.jaccard_standalone(
             kernel,
             vectors_pdx, queries,
             len(queries), len(vectors), k, data_popcounts)
     else:
+        # Warmup
+        for i in range(5):
+            result = cppyy.gbl.jaccard_standalone(
+                kernel,
+                vectors_pdx, queries,
+                len(queries), len(vectors), k)
+        start = time.perf_counter()
         result = cppyy.gbl.jaccard_standalone(
             kernel,
             vectors_pdx, queries,
@@ -776,9 +802,6 @@ def main(
         # Analyze all the kernels:
         for name, _, kernel_id in kernels_cpp:
             # Warmup
-            bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
-            bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
-            bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
             stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
