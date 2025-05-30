@@ -72,7 +72,7 @@ void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
         _mm256_storeu_si256((__m256i *)(popcnt_tmp + (i * 32)), popcnt_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
-        distances_tmp[i] = popcnt_tmp;
+        distances_tmp[i] = popcnt_tmp[i];
     }
 }
 
