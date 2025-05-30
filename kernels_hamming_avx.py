@@ -178,6 +178,9 @@ def bench_faiss(
     faiss_set_threads(threads)
     n = vectors.shape[0]
     queries = vectors.copy()[:query_count]
+    # Warmup
+    for i in range(5):
+        _, matches = faiss_knn_hamming(vectors, queries, k, variant='hc')
     start = time.perf_counter()
     _, matches = faiss_knn_hamming(vectors, queries, k, variant='hc')
     elapsed = time.perf_counter() - start
