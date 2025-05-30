@@ -5,7 +5,7 @@
 ///////////////////////////////
 ///////////////////////////////
 
-"""
+/*
 x = range(0, 16)
 y = range(15, -1, -1)
 for i in x:
@@ -19,7 +19,7 @@ for i in x:
      print()
      print(");")
      print()
-"""
+*/
 
 alignas(64) static const __m256i m256_intersection_lut_0  = _mm256_set_epi8(
     0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
