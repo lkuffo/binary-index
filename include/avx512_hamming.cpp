@@ -99,7 +99,7 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 
         for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i xor_ = _mm512_xor_epi64(first, second);
+            __m512i xor_ = second;//_mm512_xor_epi64(first, second);
 
             // Getting nibbles from data
             __m512i second_low = _mm512_and_si512(xor_, low_mask);
