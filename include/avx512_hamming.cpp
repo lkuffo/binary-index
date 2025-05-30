@@ -511,13 +511,13 @@ void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *secon
     }
     // TODO: Ugly
     for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512(popcnt_tmp_512_a + (i * 64), popcnt_result_a[i]);
-        _mm512_storeu_si512(popcnt_tmp_512_b + (i * 64), popcnt_result_b[i]);
-        _mm512_storeu_si512(popcnt_tmp_512_c + (i * 64), popcnt_result_c[i]);
-        _mm512_storeu_si512(popcnt_tmp_512_d + (i * 64), popcnt_result_d[i]);
+        _mm512_storeu_si512(popcnt_tmp_1024_a + (i * 64), popcnt_result_a[i]);
+        _mm512_storeu_si512(popcnt_tmp_1024_b + (i * 64), popcnt_result_b[i]);
+        _mm512_storeu_si512(popcnt_tmp_1024_c + (i * 64), popcnt_result_c[i]);
+        _mm512_storeu_si512(popcnt_tmp_1024_d + (i * 64), popcnt_result_d[i]);
     }
     for (size_t i = 0; i < 256; i++){
-        distances_tmp[i] = popcnt_tmp_512_a[i] + popcnt_tmp_512_b[i] + popcnt_tmp_512_c[i] + popcnt_tmp_512_d[i];
+        distances_tmp[i] = popcnt_tmp_1024_a[i] + popcnt_tmp_1024_b[i] + popcnt_tmp_1024_c[i] + popcnt_tmp_1024_d[i];
     }
 }
 
