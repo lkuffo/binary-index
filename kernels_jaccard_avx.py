@@ -170,8 +170,8 @@ enum JaccardKernel {
     JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B512_VPOPCNTQ, 
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED, 
-    JACCARD_B512_VPOPCNTQ_PDX, // TODO
-    JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX, // TODO
+    JACCARD_B512_VPOPCNTQ_PDX, 
+    JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B512_VPSHUFB_PDX, // TODO
     JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX, // TODO
     JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, // TODO
@@ -218,9 +218,7 @@ float jaccard_b256_vpopcntq_precomputed(
 
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 void jaccard_b256_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 void jaccard_b256_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
@@ -233,6 +231,9 @@ __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b512_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b512_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+
 
 
 //
@@ -255,6 +256,8 @@ float jaccard_b1024_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t co
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1024_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
 void jaccard_b1024_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const *second_popcounts);
+void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
 
 //
@@ -432,6 +435,7 @@ def bench_standalone_pdx(
     if len(vectors) % 256 != 0:
         raise Exception('Number of vectors must be divisible by 256')
 
+    # TODO: Unfair if this is never in cache, in contrast to the other approaches
     vectors_pdx = row_major_to_pdx(vectors, 256)
 
     start = time.perf_counter()
@@ -664,7 +668,16 @@ def main(
         )
     ]
     standalone_kernels_cpp_pdx_512d = [
-
+        (
+            "JACCARD_B512_VPOPCNTQ_PDX",
+            cppyy.gbl.jaccard_b512_vpopcntq_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ_PDX
+        ),
+        (
+            "JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b512_vpopcntq_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX
+        ),
     ]
     standalone_kernels_cpp_pdx_1024d = [
         (
@@ -750,7 +763,7 @@ def main(
 
         # Analyze all the kernels:
         for name, _, kernel_id in kernels_cpp:
-            # warmup
+            # Warmup
             bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)

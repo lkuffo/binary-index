@@ -40,8 +40,8 @@ enum JaccardKernel {
     JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B512_VPOPCNTQ,
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED,
-    JACCARD_B512_VPOPCNTQ_PDX, // TODO
-    JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX, // TODO
+    JACCARD_B512_VPOPCNTQ_PDX,
+    JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B512_VPSHUFB_PDX, // TODO
     JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX, // TODO
     JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, // TODO
@@ -554,6 +554,162 @@ float jaccard_b512_vpopcntq_precomputed(
     auto intersection = _mm512_reduce_add_epi64(intersection_);
     float denominator = first_popcount + second_popcount - intersection;
     return (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+}
+
+
+void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m512i intersections_result_a[4];
+    __m512i intersections_result_b[4];
+    __m512i intersections_result_c[4];
+    __m512i intersections_result_d[4];
+    __m512i unions_result_a[4];
+    __m512i unions_result_b[4];
+    __m512i unions_result_c[4];
+    __m512i unions_result_d[4];
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
+        intersections_result_a[i] = _mm512_setzero_si512();
+        intersections_result_b[i] = _mm512_setzero_si512();
+        intersections_result_c[i] = _mm512_setzero_si512();
+        intersections_result_d[i] = _mm512_setzero_si512();
+        unions_result_a[i] = _mm512_setzero_si512();
+        unions_result_b[i] = _mm512_setzero_si512();
+        unions_result_c[i] = _mm512_setzero_si512();
+        unions_result_d[i] = _mm512_setzero_si512();
+    }
+    // Word 0 to 31
+    for (size_t dim = 0; dim != 32; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
+            unions_result_a[i] = _mm512_add_epi8(unions_result_a[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 32 to 63
+    for (size_t dim = 32; dim != 64; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
+            unions_result_b[i] = _mm512_add_epi8(unions_result_b[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 64 to 95
+    for (size_t dim = 64; dim != 96; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
+            unions_result_c[i] = _mm512_add_epi8(unions_result_c[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 96 to 127
+    for (size_t dim = 96; dim != 128; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
+            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
+            unions_result_d[i] = _mm512_add_epi8(unions_result_d[i], union_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_a + (i * 64)), unions_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_b + (i * 64)), unions_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_c + (i * 64)), unions_result_c[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_d + (i * 64)), unions_result_d[i]);
+    }
+    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
+    for (size_t i = 0; i < 256; i++){
+        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
+        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
+        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
+    }
+}
+
+void jaccard_b512_vpopcntq_precomputed_pdx(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const first_popcount, uint32_t const *second_popcounts
+) {
+    __m512i intersections_result_a[4];
+    __m512i intersections_result_b[4];
+    __m512i intersections_result_c[4];
+    __m512i intersections_result_d[4];
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
+        intersections_result_a[i] = _mm512_setzero_si512();
+        intersections_result_b[i] = _mm512_setzero_si512();
+        intersections_result_c[i] = _mm512_setzero_si512();
+        intersections_result_d[i] = _mm512_setzero_si512();
+    }
+    // Word 0 to 31
+    for (size_t dim = 0; dim != 32; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 32 to 63
+    for (size_t dim = 32; dim != 64; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 64 to 95
+    for (size_t dim = 64; dim != 96; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // Word 96 to 127
+    for (size_t dim = 96; dim != 128; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
+    }
+    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
+    for (size_t i = 0; i < 256; i++){
+        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
+        float denominator = first_popcount + second_popcounts[i] - intersection;
+        distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+    }
 }
 
 
@@ -1630,6 +1786,7 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
         uint32_t query_popcnt;
         if constexpr (
             kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX ||
+            kernel == JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX ||
             kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX ||
             kernel == JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX ||
             kernel == JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX
@@ -1649,6 +1806,8 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 jaccard_b256_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PDX){
                 jaccard_b1024_vpopcntq_pdx(query, data);
+            } else if constexpr (kernel == JACCARD_B512_VPOPCNTQ_PDX){
+                jaccard_b512_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_VPSHUFB_PDX) {
                 jaccard_b1024_vpopcntq_vpshufb_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B256_VPSHUFB_PDX){
@@ -1657,6 +1816,8 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 jaccard_b256_vpopcntq_vpshufb_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX){
                 jaccard_b1024_vpopcntq_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data);
+            } else if constexpr (kernel == JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX){
+                jaccard_b512_vpopcntq_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data);
             } else if constexpr (kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX){
                 jaccard_b256_vpopcntq_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data);
             } else if constexpr (kernel == JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX){
@@ -1673,6 +1834,7 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
             data += N_WORDS * PDX_BLOCK_SIZE;
             if constexpr (
                 kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX ||
+                kernel == JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX ||
                 kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX ||
                 kernel == JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX ||
                 kernel == JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX
@@ -1739,6 +1901,11 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_standalone_partial_sort<JACCARD_B512_VPOPCNTQ, 64>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B512_VPOPCNTQ_PRECOMPUTED:
             return jaccard_standalone_partial_sort<JACCARD_B512_VPOPCNTQ_PRECOMPUTED, 64>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
+        case JACCARD_B512_VPOPCNTQ_PDX:
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPOPCNTQ_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX:
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
+
 
 
         case JACCARD_U8X128_C: // 1024
