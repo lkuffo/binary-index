@@ -108,6 +108,7 @@ enum HammingKernel {
     HAMMING_B512_VPOPCNTQ, 
     HAMMING_B512_VPOPCNTQ_PDX, 
     HAMMING_B512_VPSHUFB_PDX,
+    HAMMING_B256_XORLUT_PDX,
     // 1024
     HAMMING_U8X128_C,
     HAMMING_U64X16_C,
@@ -127,6 +128,7 @@ float hamming_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 //
 // 512 region
@@ -452,6 +454,11 @@ def main(
             "HAMMING_B256_VPSHUFB_PDX",
             cppyy.gbl.hamming_b256_vpshufb_pdx,
             cppyy.gbl.HammingKernel.HAMMING_B256_VPSHUFB_PDX
+        ),
+        (
+            "HAMMING_B256_XORLUT_PDX",
+            cppyy.gbl.hamming_b256_xorlut_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B256_XORLUT_PDX
         ),
     ]
     standalone_kernels_cpp_pdx_512d = [
