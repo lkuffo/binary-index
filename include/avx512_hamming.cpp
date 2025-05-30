@@ -110,37 +110,37 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
         intersections_result[i] = _mm256_set1_epi8(0);
         unions_result[i] = _mm256_set1_epi8(0);
     }
-    for (size_t dim = 0; dim != 32; dim++){
-        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
-        uint8_t first_low = first_vector[dim] & 0x0F;
-
-        // Choose lookup tables
-        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
-        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
-        __m256i lut_union_high = m256_union_lookup_tables[first_high];
-        __m256i lut_union_low = m256_union_lookup_tables[first_low];
-
-        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
-            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-
-            // Getting nibbles from data
-            __m256i second_low = _mm256_and_si256(second, low_mask);
-            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
-
-            __m256i intersection = _mm256_add_epi8(
-                _mm256_shuffle_epi8(lut_intersection_low, second_low),
-                _mm256_shuffle_epi8(lut_intersection_high, second_high)
-            );
-            __m256i union_ = _mm256_add_epi8(
-                _mm256_shuffle_epi8(lut_union_low, second_low),
-                _mm256_shuffle_epi8(lut_union_high, second_high)
-            );
-
-            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
-            unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
-            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
+//    for (size_t dim = 0; dim != 32; dim++){
+//        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+//        uint8_t first_low = first_vector[dim] & 0x0F;
+//
+//        // Choose lookup tables
+//        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+//        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+//        __m256i lut_union_high = m256_union_lookup_tables[first_high];
+//        __m256i lut_union_low = m256_union_lookup_tables[first_low];
+//
+//        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
+//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+//
+//            // Getting nibbles from data
+//            __m256i second_low = _mm256_and_si256(second, low_mask);
+//            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
+//
+//            __m256i intersection = _mm256_add_epi8(
+//                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+//                _mm256_shuffle_epi8(lut_intersection_high, second_high)
+//            );
+//            __m256i union_ = _mm256_add_epi8(
+//                _mm256_shuffle_epi8(lut_union_low, second_low),
+//                _mm256_shuffle_epi8(lut_union_high, second_high)
+//            );
+//
+//            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
+//            unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
+//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+//        }
+//    }
     // TODO: Ugly
     for (size_t i = 0; i < 8; i++) {
         _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
@@ -219,7 +219,7 @@ float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
     __m256i popcnt = _mm256_popcnt_epi64(_mm256_xor_epi64(first, second));
-    return _mm256_reduce_add_epi64(intersection);
+    return _mm256_reduce_add_epi64(popcnt);
 }
 
 
