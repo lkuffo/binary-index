@@ -226,62 +226,6 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
     );
 
     __m512i vector_of_4 = _mm512_set1_epi8(4);
-    
-//    __m512i inline_m512_xor_lut_8 = _mm512_set_epi8(
-//        3, 2, 2, 1, 2, 1, 1, 0, 4, 3, 3, 2, 3, 2, 2, 1,
-//        3, 2, 2, 1, 2, 1, 1, 0, 4, 3, 3, 2, 3, 2, 2, 1,
-//        3, 2, 2, 1, 2, 1, 1, 0, 4, 3, 3, 2, 3, 2, 2, 1,
-//        3, 2, 2, 1, 2, 1, 1, 0, 4, 3, 3, 2, 3, 2, 2, 1
-//    );
-//
-//    __m512i inline_m512_xor_lut_9 = _mm512_set_epi8(
-//        2, 3, 1, 2, 1, 2, 0, 1, 3, 4, 2, 3, 2, 3, 1, 2,
-//        2, 3, 1, 2, 1, 2, 0, 1, 3, 4, 2, 3, 2, 3, 1, 2,
-//        2, 3, 1, 2, 1, 2, 0, 1, 3, 4, 2, 3, 2, 3, 1, 2,
-//        2, 3, 1, 2, 1, 2, 0, 1, 3, 4, 2, 3, 2, 3, 1, 2
-//    );
-//
-//    __m512i inline_m512_xor_lut_10 = _mm512_set_epi8(
-//        2, 1, 3, 2, 1, 0, 2, 1, 3, 2, 4, 3, 2, 1, 3, 2,
-//        2, 1, 3, 2, 1, 0, 2, 1, 3, 2, 4, 3, 2, 1, 3, 2,
-//        2, 1, 3, 2, 1, 0, 2, 1, 3, 2, 4, 3, 2, 1, 3, 2,
-//        2, 1, 3, 2, 1, 0, 2, 1, 3, 2, 4, 3, 2, 1, 3, 2
-//    );
-//
-//    __m512i inline_m512_xor_lut_11 = _mm512_set_epi8(
-//        1, 2, 2, 3, 0, 1, 1, 2, 2, 3, 3, 4, 1, 2, 2, 3,
-//        1, 2, 2, 3, 0, 1, 1, 2, 2, 3, 3, 4, 1, 2, 2, 3,
-//        1, 2, 2, 3, 0, 1, 1, 2, 2, 3, 3, 4, 1, 2, 2, 3,
-//        1, 2, 2, 3, 0, 1, 1, 2, 2, 3, 3, 4, 1, 2, 2, 3
-//    );
-//
-//    __m512i inline_m512_xor_lut_12 = _mm512_set_epi8(
-//        2, 1, 1, 0, 3, 2, 2, 1, 3, 2, 2, 1, 4, 3, 3, 2,
-//        2, 1, 1, 0, 3, 2, 2, 1, 3, 2, 2, 1, 4, 3, 3, 2,
-//        2, 1, 1, 0, 3, 2, 2, 1, 3, 2, 2, 1, 4, 3, 3, 2,
-//        2, 1, 1, 0, 3, 2, 2, 1, 3, 2, 2, 1, 4, 3, 3, 2
-//    );
-//
-//    __m512i inline_m512_xor_lut_13 = _mm512_set_epi8(
-//        1, 2, 0, 1, 2, 3, 1, 2, 2, 3, 1, 2, 3, 4, 2, 3,
-//        1, 2, 0, 1, 2, 3, 1, 2, 2, 3, 1, 2, 3, 4, 2, 3,
-//        1, 2, 0, 1, 2, 3, 1, 2, 2, 3, 1, 2, 3, 4, 2, 3,
-//        1, 2, 0, 1, 2, 3, 1, 2, 2, 3, 1, 2, 3, 4, 2, 3
-//    );
-//
-//    __m512i inline_m512_xor_lut_14 = _mm512_set_epi8(
-//        1, 0, 2, 1, 2, 1, 3, 2, 2, 1, 3, 2, 3, 2, 4, 3,
-//        1, 0, 2, 1, 2, 1, 3, 2, 2, 1, 3, 2, 3, 2, 4, 3,
-//        1, 0, 2, 1, 2, 1, 3, 2, 2, 1, 3, 2, 3, 2, 4, 3,
-//        1, 0, 2, 1, 2, 1, 3, 2, 2, 1, 3, 2, 3, 2, 4, 3
-//    );
-//
-//    __m512i inline_m512_xor_lut_15 = _mm512_set_epi8(
-//        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-//        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-//        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4,
-//        0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4
-//    );
 
     __m512i base_lut = m512_xor_lookup_tables[0];
     for (size_t dim = 0; dim != 32; dim++){
@@ -305,21 +249,21 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         } else if (first_high == 7){
             lut_xor_high = inline_m512_xor_lut_7;
         } else if (first_high == 8){
-            lut_xor_high = inline_m512_xor_lut_7;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_7);
         } else if (first_high == 9){
-            lut_xor_high = inline_m512_xor_lut_6;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_6);
         } else if (first_high == 10){
-            lut_xor_high = inline_m512_xor_lut_5;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_5);
         } else if (first_high == 11){
-            lut_xor_high = inline_m512_xor_lut_4;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_4);
         } else if (first_high == 12){
-            lut_xor_high = inline_m512_xor_lut_3;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_3);
         } else if (first_high == 13){
-            lut_xor_high = inline_m512_xor_lut_2;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_2);
         } else if (first_high == 14){
-            lut_xor_high = inline_m512_xor_lut_1;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_1);
         } else if (first_high == 15){
-            lut_xor_high = inline_m512_xor_lut_0;
+            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_0);
         }
         if (first_low == 1){
             lut_xor_low = inline_m512_xor_lut_1;
@@ -336,21 +280,21 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         } else if (first_low == 7){
             lut_xor_low = inline_m512_xor_lut_7;
         } else if (first_low == 8){
-            lut_xor_low = inline_m512_xor_lut_7;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_7);
         } else if (first_low == 9){
-            lut_xor_low = inline_m512_xor_lut_6;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_6);
         } else if (first_low == 10){
-            lut_xor_low = inline_m512_xor_lut_5;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_5);
         } else if (first_low == 11){
-            lut_xor_low = inline_m512_xor_lut_4;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_4);
         } else if (first_low == 12){
-            lut_xor_low = inline_m512_xor_lut_3;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_3);
         } else if (first_low == 13){
-            lut_xor_low = inline_m512_xor_lut_2;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_2);
         } else if (first_low == 14){
-            lut_xor_low = inline_m512_xor_lut_1;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_1);
         } else if (first_low == 15){
-            lut_xor_low = inline_m512_xor_lut_0;
+            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_0);
         }
 
 //        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
