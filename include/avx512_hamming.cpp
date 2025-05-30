@@ -136,8 +136,8 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
         uint8_t first_low = first_vector[dim] & 0x0F;
         // Choose lookup tables
-        __m512i lut_xor_high = m512_xor_lookup_tables[dim % 16];
-        __m512i lut_xor_low = m512_xor_lookup_tables[dim % 16];
+        __m512i lut_xor_high = m512_xor_lookup_tables[first_high % 16];
+        __m512i lut_xor_low = m512_xor_lookup_tables[first_low % 16];
 
 //        lut_xor_high = _mm512_add_epi8(lut_xor_high, _mm512_set1_epi8(1));
 //        lut_xor_low = _mm512_add_epi8(lut_xor_high, _mm512_set1_epi8(0));
