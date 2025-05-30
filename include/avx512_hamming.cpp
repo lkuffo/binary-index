@@ -150,6 +150,24 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         -2, -2, -2, -2,  0,  0,  0,  0,  0,  0,  0,  0, -2, -2, -2, -2,
         -2, -2, -2, -2,  0,  0,  0,  0,  0,  0,  0,  0, -2, -2, -2, -2
     );
+    __m512i transf1 = _mm512_set_epi8(
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
+        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1
+    );
+    __m512i transf2 = _mm512_set_epi8(
+        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
+        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
+        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
+        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
+    );
+    __m512i transf3 = _mm512_set_epi8(
+        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
+        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
+        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
+        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
+    );
     __m512i base_lut = m512_xor_lookup_tables[0];
     for (size_t dim = 0; dim != 32; dim++){
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
@@ -166,12 +184,27 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         } else if (first_high / 4 == 3) {
             __m512i lut_xor_high = _mm512_add_epi8(base_lut, lookup3);
         }
+        if (first_high % 4 == 1) {
+            __m512i lut_xor_high = _mm512_add_epi8(lut_xor_high, transf1);
+        } else if (first_high % 4 == 2) {
+            __m512i lut_xor_high = _mm512_add_epi8(lut_xor_high, transf2);
+        } else if (first_high % 4 == 3) {
+            __m512i lut_xor_high = _mm512_add_epi8(lut_xor_high, transf3);
+        }
+
         if (first_low / 4 == 1) {
             __m512i lut_xor_low = _mm512_add_epi8(base_lut, lookup1);
         } else if (first_low / 4 == 2) {
             __m512i lut_xor_low = _mm512_add_epi8(base_lut, lookup2);
         } else if (first_low / 4 == 3) {
             __m512i lut_xor_low = _mm512_add_epi8(base_lut, lookup3);
+        }
+        if (first_low % 4 == 1) {
+            __m512i lut_xor_low = _mm512_add_epi8(lut_xor_low, transf1);
+        } else if (first_low % 4 == 2) {
+            __m512i lut_xor_low = _mm512_add_epi8(lut_xor_low, transf2);
+        } else if (first_low % 4 == 3) {
+            __m512i lut_xor_low = _mm512_add_epi8(lut_xor_low, transf3);
         }
 
         for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
