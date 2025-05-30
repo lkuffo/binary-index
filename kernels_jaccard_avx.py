@@ -166,8 +166,8 @@ enum JaccardKernel {
     JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX,
     JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX,
     // 512
-    JACCARD_B512_VPSHUFB_SAD, // TODO
-    JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED, // TODO
+    JACCARD_B512_VPSHUFB_SAD,
+    JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B512_VPOPCNTQ, // TODO
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED, // TODO
     JACCARD_B512_VPOPCNTQ_PDX, // TODO
@@ -223,6 +223,15 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
 void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 void jaccard_b256_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 void jaccard_b256_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+
+//
+// 512 region
+//
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float jaccard_b512_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+
 
 //
 // 1024 region
@@ -507,6 +516,19 @@ def main(
         ),
     ]
 
+    kernels_cpp_512d = [
+        (
+            "JACCARD_B512_VPSHUFB_SAD",
+            cppyy.gbl.jaccard_b512_vpshufb_sad,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPSHUFB_SAD
+        ),
+        (
+            "JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED",
+            cppyy.gbl.jaccard_b512_vpshufb_sad_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED
+        ),
+    ]
+
     kernels_cpp_1024d = [
         # C++:
         # (
@@ -655,6 +677,7 @@ def main(
     # Group kernels by dimension:
     kernels_cpp_per_dimension = {
         256: kernels_cpp_256d,
+        512: kernels_cpp_512d,
         1024: kernels_cpp_1024d,
         1536: kernels_cpp_1536d,
     }
@@ -665,6 +688,7 @@ def main(
     }
     kernels_cpp_pdx = {
         256: standalone_kernels_cpp_pdx_256d,
+        512: standalone_kernels_cpp_pdx_512d,
         1024: standalone_kernels_cpp_pdx_1024d,
     }
 
