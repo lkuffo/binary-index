@@ -832,6 +832,8 @@ std::vector<KNNCandidate> hamming_standalone(
             return hamming_standalone_partial_sort<HAMMING_B256_VPOPCNTQ, 32>(first_vector, second_vector, num_queries, num_vectors, knn);
         case HAMMING_B256_VPOPCNTQ_PDX:
             return hamming_pdx_standalone_partial_sort<HAMMING_B256_VPOPCNTQ_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case HAMMING_B256_VPSHUFB_PDX:
+            return hamming_pdx_standalone_partial_sort<HAMMING_B256_VPSHUFB_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
 
 
         case HAMMING_B512_VPSHUFB_SAD: // 512
