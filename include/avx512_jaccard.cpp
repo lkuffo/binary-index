@@ -733,8 +733,6 @@ void jaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
     for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
         intersections_result_a[i] = _mm256_set1_epi8(0);
         intersections_result_b[i] = _mm256_set1_epi8(0);
-        intersections_result_c[i] = _mm256_set1_epi8(0);
-        intersections_result_d[i] = _mm256_set1_epi8(0);
         unions_result_a[i] = _mm256_set1_epi8(0);
         unions_result_b[i] = _mm256_set1_epi8(0);
     }
