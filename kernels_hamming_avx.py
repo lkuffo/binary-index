@@ -448,11 +448,11 @@ def main(
             cppyy.gbl.hamming_b256_vpopcntq_pdx,
             cppyy.gbl.HammingKernel.HAMMING_B256_VPOPCNTQ_PDX
         ),
-        # (
-        #     "HAMMING_B256_VPSHUFB_PDX",
-        #     cppyy.gbl.hamming_b256_vpshufb_pdx,
-        #     cppyy.gbl.HammingKernel.HAMMING_B256_VPSHUFB_PDX
-        # ),
+        (
+            "HAMMING_B256_VPSHUFB_PDX",
+            cppyy.gbl.hamming_b256_vpshufb_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B256_VPSHUFB_PDX
+        ),
     ]
     standalone_kernels_cpp_pdx_512d = [
         (
