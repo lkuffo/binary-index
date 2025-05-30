@@ -750,6 +750,10 @@ def main(
 
         # Analyze all the kernels:
         for name, _, kernel_id in kernels_cpp:
+            # warmup
+            bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
+            bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
+            bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
             stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
