@@ -301,13 +301,13 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
 //        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
         __m512i lut_xor_high = base_lut;
         __m512i lut_xor_low = base_lut;
-        if (first_high / 4 == 1) {
-            lut_xor_high = _mm512_add_epi8(base_lut, lookup1);
-        } else if (first_high / 4 == 2) {
-            lut_xor_high = _mm512_add_epi8(base_lut, lookup2);
-        } else if (first_high / 4 == 3) {
-            lut_xor_high = _mm512_add_epi8(base_lut, lookup3);
-        }
+//        if (first_high / 4 == 1) {
+//            lut_xor_high = _mm512_add_epi8(base_lut, lookup1);
+//        } else if (first_high / 4 == 2) {
+//            lut_xor_high = _mm512_add_epi8(base_lut, lookup2);
+//        } else if (first_high / 4 == 3) {
+//            lut_xor_high = _mm512_add_epi8(base_lut, lookup3);
+//        }
 //        if (first_high % 4 == 1) {
 //            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf1);
 //        } else if (first_high % 4 == 2) {
@@ -316,13 +316,13 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
 //            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf3);
 //        }
 
-        if (first_low / 4 == 1) {
-            lut_xor_low = _mm512_add_epi8(base_lut, lookup1);
-        } else if (first_low / 4 == 2) {
-            lut_xor_low = _mm512_add_epi8(base_lut, lookup2);
-        } else if (first_low / 4 == 3) {
-            lut_xor_low = _mm512_add_epi8(base_lut, lookup3);
-        }
+//        if (first_low / 4 == 1) {
+//            lut_xor_low = _mm512_add_epi8(base_lut, lookup1);
+//        } else if (first_low / 4 == 2) {
+//            lut_xor_low = _mm512_add_epi8(base_lut, lookup2);
+//        } else if (first_low / 4 == 3) {
+//            lut_xor_low = _mm512_add_epi8(base_lut, lookup3);
+//        }
 //        if (first_low % 4 == 1) {
 //            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf1);
 //        } else if (first_low % 4 == 2) {
