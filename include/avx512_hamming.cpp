@@ -302,33 +302,33 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         __m512i lut_xor_high = base_lut;
         __m512i lut_xor_low = base_lut;
         if (first_high / 4 == 1) {
-            __m512i lut_xor_high = _mm512_add_epi8(base_lut, lookup1);
+            lut_xor_high = _mm512_add_epi8(base_lut, lookup1);
         } else if (first_high / 4 == 2) {
-            __m512i lut_xor_high = _mm512_add_epi8(base_lut, lookup2);
+            lut_xor_high = _mm512_add_epi8(base_lut, lookup2);
         } else if (first_high / 4 == 3) {
-            __m512i lut_xor_high = _mm512_add_epi8(base_lut, lookup3);
+            lut_xor_high = _mm512_add_epi8(base_lut, lookup3);
         }
         if (first_high % 4 == 1) {
-            __m512i lut_xor_high = _mm512_add_epi8(lut_xor_high, transf1);
+            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf1);
         } else if (first_high % 4 == 2) {
-            __m512i lut_xor_high = _mm512_add_epi8(lut_xor_high, transf2);
+            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf2);
         } else if (first_high % 4 == 3) {
-            __m512i lut_xor_high = _mm512_add_epi8(lut_xor_high, transf3);
+            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf3);
         }
 
         if (first_low / 4 == 1) {
-            __m512i lut_xor_low = _mm512_add_epi8(base_lut, lookup1);
+            lut_xor_low = _mm512_add_epi8(base_lut, lookup1);
         } else if (first_low / 4 == 2) {
-            __m512i lut_xor_low = _mm512_add_epi8(base_lut, lookup2);
+            lut_xor_low = _mm512_add_epi8(base_lut, lookup2);
         } else if (first_low / 4 == 3) {
-            __m512i lut_xor_low = _mm512_add_epi8(base_lut, lookup3);
+            lut_xor_low = _mm512_add_epi8(base_lut, lookup3);
         }
         if (first_low % 4 == 1) {
-            __m512i lut_xor_low = _mm512_add_epi8(lut_xor_low, transf1);
+            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf1);
         } else if (first_low % 4 == 2) {
-            __m512i lut_xor_low = _mm512_add_epi8(lut_xor_low, transf2);
+            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf2);
         } else if (first_low % 4 == 3) {
-            __m512i lut_xor_low = _mm512_add_epi8(lut_xor_low, transf3);
+            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf3);
         }
 
         for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
