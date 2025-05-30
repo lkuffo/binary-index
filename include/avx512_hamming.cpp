@@ -132,15 +132,32 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
         popcnt_result[i] = _mm512_setzero_si512();
     }
+//    uint8_t nibbles_count[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+//    for (size_t dim = 0; dim != 32; dim++){
+//        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+//        uint8_t first_low = first_vector[dim] & 0x0F;
+//    }
+//    for (size_t nibble = 0; nibble != 16; nibble++){
+//
+//    }
     for (size_t dim = 0; dim != 32; dim++){
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
         uint8_t first_low = first_vector[dim] & 0x0F;
         // Choose lookup tables
-        __m512i lut_xor_high = m512_xor_lookup_tables[first_high % 16];
-        __m512i lut_xor_low = m512_xor_lookup_tables[first_low % 16];
-
-//        lut_xor_high = _mm512_add_epi8(lut_xor_high, _mm512_set1_epi8(1));
-//        lut_xor_low = _mm512_add_epi8(lut_xor_high, _mm512_set1_epi8(0));
+        uint8_t lut_high = 0;
+        uint8_t lut_low = 0;
+        if (first_high < 8){
+            lut_high = 0;
+        } else {
+            lut_high = 1;
+        }
+        if (first_low < 8){
+            lut_low = 0;
+        } else {
+            lut_low = 1;
+        }
+        __m512i lut_xor_high = m512_xor_lookup_tables[lut_high];
+        __m512i lut_xor_low = m512_xor_lookup_tables[lut_low];
 
         for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
             __m512i second = _mm512_loadu_epi8(second_vector);
