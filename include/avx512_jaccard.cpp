@@ -533,7 +533,7 @@ float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
 
-    __m512i intersection_ = _mm512_popcnt_epi64(_mm512_and_epi64(first_start, second_start));
+    __m512i intersection = _mm512_popcnt_epi64(_mm512_and_epi64(first_start, second_start));
     __m512i union_ = _mm512_popcnt_epi64(_mm512_or_epi64(first_start, second_start));
 
     return 1.f - (_mm512_reduce_add_epi64(intersection) + 1.f) / (_mm512_reduce_add_epi64(union_) + 1.f);
