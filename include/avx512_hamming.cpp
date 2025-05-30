@@ -81,18 +81,19 @@ void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i popcnt_result[8];
+    __m256i lookup = _mm256_set_epi8(
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
     // Load initial values
     for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
         popcnt_result[i] = _mm256_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
 //        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
 //        uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
-        __m256i lookup = _mm256_set_epi8(
-            4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
-            4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
         for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
