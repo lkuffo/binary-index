@@ -651,6 +651,9 @@ def main(
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX
         )
     ]
+    standalone_kernels_cpp_pdx_512d = [
+        
+    ]
     standalone_kernels_cpp_pdx_1024d = [
         (
             "JACCARD_B1024_VPOPCNTQ_PDX",
