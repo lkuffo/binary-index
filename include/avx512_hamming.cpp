@@ -150,24 +150,24 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         -2, -2, -2, -2,  0,  0,  0,  0,  0,  0,  0,  0, 2, 2, 2, 2,
         -2, -2, -2, -2,  0,  0,  0,  0,  0,  0,  0,  0, 2, 2, 2, 2
     );
-    __m512i transf1 = _mm512_set_epi8(
-        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
-        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
-        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
-        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1
-    );
-    __m512i transf2 = _mm512_set_epi8(
-        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
-        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
-        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
-        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1
-    );
-    __m512i transf3 = _mm512_set_epi8(
-        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
-        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
-        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
-        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2
-    );
+//    __m512i transf1 = _mm512_set_epi8(
+//        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
+//        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
+//        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1,
+//        -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1, -1, +1
+//    );
+//    __m512i transf2 = _mm512_set_epi8(
+//        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
+//        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
+//        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1,
+//        -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1, -1, -1, +1, +1
+//    );
+//    __m512i transf3 = _mm512_set_epi8(
+//        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
+//        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
+//        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2,
+//        -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2
+//    );
 
 //    __m512i inline_m512_xor_lut_0 = _mm512_set_epi8(
 //        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
@@ -308,13 +308,13 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         } else if (first_high / 4 == 3) {
             lut_xor_high = _mm512_add_epi8(base_lut, lookup3);
         }
-        if (first_high % 4 == 1) {
-            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf1);
-        } else if (first_high % 4 == 2) {
-            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf2);
-        } else if (first_high % 4 == 3) {
-            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf3);
-        }
+//        if (first_high % 4 == 1) {
+//            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf1);
+//        } else if (first_high % 4 == 2) {
+//            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf2);
+//        } else if (first_high % 4 == 3) {
+//            lut_xor_high = _mm512_add_epi8(lut_xor_high, transf3);
+//        }
 
         if (first_low / 4 == 1) {
             lut_xor_low = _mm512_add_epi8(base_lut, lookup1);
@@ -323,13 +323,13 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         } else if (first_low / 4 == 3) {
             lut_xor_low = _mm512_add_epi8(base_lut, lookup3);
         }
-        if (first_low % 4 == 1) {
-            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf1);
-        } else if (first_low % 4 == 2) {
-            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf2);
-        } else if (first_low % 4 == 3) {
-            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf3);
-        }
+//        if (first_low % 4 == 1) {
+//            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf1);
+//        } else if (first_low % 4 == 2) {
+//            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf2);
+//        } else if (first_low % 4 == 3) {
+//            lut_xor_low = _mm512_add_epi8(lut_xor_low, transf3);
+//        }
 
         for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
             __m512i second = _mm512_loadu_epi8(second_vector);
