@@ -593,48 +593,6 @@ float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *seco
     return _mm512_reduce_add_epi64(popcnt);
 }
 
-// 1-to-256 vectors
-// second_vector is a 256*256 matrix in a column-major layout
-void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m512i low_mask = _mm512_set1_epi8(0x0f);
-    __m512i popcnt_result[4];
-    __m512i lookup = _mm512_set_epi8(
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-    // Load initial values
-    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
-        popcnt_result[i] = _mm512_setzero_si512();
-    }
-    for (size_t dim = 0; dim != 32; dim++){
-        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-
-        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
-            __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i xor_ = _mm512_xor_epi64(first, second);
-
-            // Getting nibbles from data
-            __m512i second_low = _mm512_and_si512(xor_, low_mask);
-            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
-
-            __m512i popcnt_ = _mm512_add_epi8(
-                _mm512_shuffle_epi8(lookup, second_low),
-                _mm512_shuffle_epi8(lookup, second_high)
-            );
-
-            popcnt_result[i] = _mm512_add_epi8(popcnt_result[i], popcnt_);
-            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
-    // TODO: Ugly
-    for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512(popcnt_tmp + (i * 64), popcnt_result[i]);
-    }
-    for (size_t i = 0; i < 256; i++){
-        distances_tmp[i] = popcnt_tmp[i];
-    }
-}
 
 
 // Harley-Seal transformation and Odd-Major-style Carry-Save-Adders can be used to replace
