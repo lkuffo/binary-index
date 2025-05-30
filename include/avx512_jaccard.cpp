@@ -43,7 +43,7 @@ enum JaccardKernel {
     JACCARD_B512_VPOPCNTQ_PDX,
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B512_VPSHUFB_PDX, // TODO
-    JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX, // TODO
+    JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX,
     JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, // TODO
     // 1024
     JACCARD_U8X128_C,
@@ -656,6 +656,73 @@ void jaccard_b512_vpopcntq_precomputed_pdx(
         distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
     }
 }
+
+
+
+void jaccard_b512_vpshufb_precomputed_pdx(
+    uint8_t const *first_vector, uint8_t const *second_vector,
+    uint32_t const first_popcount, uint32_t const *second_popcounts
+) {
+    __m256i low_mask = _mm256_set1_epi8(0x0f);
+    __m256i intersections_result_a[8];
+    __m256i intersections_result_b[8];
+    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
+        intersections_result_a[i] = _mm256_set1_epi8(0);
+        intersections_result_b[i] = _mm256_set1_epi8(0);
+    }
+    // Word 0 to 31
+    for (size_t dim = 0; dim != 32; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+        uint8_t first_low = first_vector[dim] & 0x0F;
+        // Choose lookup tables
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            // Getting nibbles from data
+            __m256i second_low = _mm256_and_si256(second, low_mask);
+            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
+            __m256i intersection = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_low)
+            );
+            intersections_result_a[i] = _mm256_add_epi8(intersections_result_a[i], intersection);
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+   // Word 32 to 63
+    for (size_t dim = 32; dim != 64; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+        uint8_t first_low = first_vector[dim] & 0x0F;
+        // Choose lookup tables
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            // Getting nibbles from data
+            __m256i second_low = _mm256_and_si256(second, low_mask);
+            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
+            __m256i intersection = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_low)
+            );
+            intersections_result_b[i] = _mm256_add_epi8(intersections_result_b[i], intersection);
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 8; i++) {
+        _mm256_storeu_si256((__m256i *)(intersections_tmp_512_a + (i * 32)), intersections_result_a[i]);
+        _mm256_storeu_si256((__m256i *)(intersections_tmp_512_b + (i * 32)), intersections_result_b[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        float intersection = intersections_tmp_512_a[i] + intersections_tmp_512_b[i];
+        float denominator = first_popcount + second_popcounts[i] - intersection;
+        distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+    }
+};
 
 
 
@@ -1734,7 +1801,8 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
             kernel == JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX ||
             kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX ||
             kernel == JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX ||
-            kernel == JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX
+            kernel == JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX ||
+            kernel == JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX
         ){
                 precomputed_popcnts_data = precomputed_popcnts;
                 // Simple popcount for query
@@ -1769,7 +1837,10 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 jaccard_b256_vpshufb_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data);
             } else if constexpr (kernel == JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX){
                 jaccard_b1024_vpshufb_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data);
+            } else if constexpr (kernel == JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX){
+                jaccard_b512_vpshufb_precomputed_pdx(query, data, query_popcnt, precomputed_popcnts_data);
             }
+
             // TODO: Ugly
             for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
                 all_distances[global_offset].index = global_offset;
@@ -1782,7 +1853,8 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 kernel == JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX ||
                 kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED_PDX ||
                 kernel == JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX ||
-                kernel == JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX
+                kernel == JACCARD_B1024_VPSHUFB_PRECOMPUTED_PDX ||
+                kernel == JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX
             ){
                 precomputed_popcnts_data += PDX_BLOCK_SIZE;
             }
@@ -1850,6 +1922,8 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPOPCNTQ_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
         case JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX:
             return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
+        case JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX:
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
 
 
 
