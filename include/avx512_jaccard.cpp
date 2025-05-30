@@ -1027,7 +1027,7 @@ float jaccard_b1024_vpopcntq_precomputed(
 // It resorts to cheaper byte-shuffling instructions, than population counts.
 // Source: https://github.com/CountOnes/hamming_weight/blob/1dd7554c0fc39e01c9d7fa54372fd4eccf458875/src/sse_jaccard_index.c#L17
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -1070,7 +1070,7 @@ float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *seco
 }
 
 
-float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
+float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
