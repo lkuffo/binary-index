@@ -251,7 +251,7 @@ void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_xor_epi64(first, second));
             popcnt_result_a[i] = _mm512_add_epi8(popcnt_result_a[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
@@ -261,7 +261,7 @@ void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_xor_epi64(first, second));
             popcnt_result_b[i] = _mm512_add_epi8(popcnt_result_b[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
@@ -309,7 +309,7 @@ void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_xor_epi64(first, second));
             popcnt_result_a[i] = _mm512_add_epi8(popcnt_result_a[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
@@ -319,7 +319,7 @@ void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_xor_epi64(first, second));
             popcnt_result_b[i] = _mm512_add_epi8(popcnt_result_b[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
