@@ -183,7 +183,7 @@ enum JaccardKernel {
     JACCARD_B1024_VPSHUFB_SAD,
     JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B1024_VPSHUFB_DPB,
-    JACCARD_B1024_VPOPCNTQ_VPSHUFB, // TODO
+    JACCARD_B1024_VPOPCNTQ_VPSHUFB,
     JACCARD_U64X16_CSA3_C,
     JACCARD_U64X16_CSA15_CPP,
     JACCARD_B1024_VPOPCNTQ_PDX,
@@ -237,6 +237,7 @@ float jaccard_b1024_vpshufb_dpb(uint8_t const *first_vector, uint8_t const *seco
 float jaccard_u64x16_csa3_c(uint8_t const *a, uint8_t const *b);
 float jaccard_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b);
 void jaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
 
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b1024_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
@@ -533,6 +534,11 @@ def main(
             "JACCARD_B1024_VPOPCNTQ",
             cppyy.gbl.jaccard_b1024_vpopcntq,
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ
+        ),
+        (
+            "JACCARD_B1024_VPOPCNTQ_VPSHUFB",
+            cppyy.gbl.jaccard_b1024_vpopcntq_vpshufb,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_VPSHUFB
         ),
         (
             "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED",
