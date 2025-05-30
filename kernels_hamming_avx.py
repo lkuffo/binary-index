@@ -443,11 +443,11 @@ def main(
         # ),
     ]
     standalone_kernels_cpp_pdx_256d = [
-        # (
-        #     "HAMMING_B256_VPOPCNTQ_PDX",
-        #     cppyy.gbl.hamming_b256_vpopcntq_pdx,
-        #     cppyy.gbl.HammingKernel.HAMMING_B256_VPOPCNTQ_PDX
-        # ),
+        (
+            "HAMMING_B256_VPOPCNTQ_PDX",
+            cppyy.gbl.hamming_b256_vpopcntq_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B256_VPOPCNTQ_PDX
+        ),
         # (
         #     "HAMMING_B256_VPSHUFB_PDX",
         #     cppyy.gbl.hamming_b256_vpshufb_pdx,
@@ -455,11 +455,11 @@ def main(
         # ),
     ]
     standalone_kernels_cpp_pdx_512d = [
-        # (
-        #     "HAMMING_B512_VPOPCNTQ_PDX",
-        #     cppyy.gbl.hamming_b512_vpopcntq_pdx,
-        #     cppyy.gbl.HammingKernel.HAMMING_B512_VPOPCNTQ_PDX
-        # ),
+        (
+            "HAMMING_B512_VPOPCNTQ_PDX",
+            cppyy.gbl.hamming_b512_vpopcntq_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B512_VPOPCNTQ_PDX
+        ),
         # (
         #     "HAMMING_B512_VPSHUFB_PDX",
         #     cppyy.gbl.hamming_b512_vpshufb_pdx,
@@ -467,11 +467,11 @@ def main(
         # ),
     ]
     standalone_kernels_cpp_pdx_1024d = [
-        # (
-        #     "HAMMING_B1024_VPOPCNTQ_PDX",
-        #     cppyy.gbl.hamming_b1024_vpopcntq_pdx,
-        #     cppyy.gbl.HammingKernel.HAMMING_B1024_VPOPCNTQ_PDX
-        # ),
+        (
+            "HAMMING_B1024_VPOPCNTQ_PDX",
+            cppyy.gbl.hamming_b1024_vpopcntq_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B1024_VPOPCNTQ_PDX
+        ),
         # (
         #     "HAMMING_B1024_VPSHUFB_PDX",
         #     cppyy.gbl.hamming_b1024_vpshufb_pdx,

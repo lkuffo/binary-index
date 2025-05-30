@@ -47,68 +47,43 @@ enum HammingKernel {
 ///////////////////////////////
 ///////////////////////////////
 
-static uint8_t intersections_tmp[256];
-static uint8_t unions_tmp[256];
-static float distances_tmp[256];
+static uint8_t popcnt_tmp[256];
+static uint32_t distances_tmp[256];
+
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-// Comments:
-//          This version does 2 popcounts
-// TODO: Change to avx512?
 void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m256i intersections_result[8];
-    __m256i unions_result[8];
+    __m256i popcnt_result[8];
     // Load initial values
     for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
-        intersections_result[i] = _mm256_set1_epi8(0);
-        unions_result[i] = _mm256_set1_epi8(0);
+        popcnt_result[i] = _mm256_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
         __m256i first = _mm256_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 8; i++){
             __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-            intersections_result[i] = _mm256_add_epi8(intersections_result[i], intersection);
-            unions_result[i] = _mm256_add_epi8(unions_result[i], union_);
+            __m256i popcnt_ = _mm256_popcnt_epi8(_mm256_xor_epi64(first, second));
+            popcnt_result[i] = _mm256_add_epi8(popcnt_result[i], popcnt_);
             second_vector += 32; // 256x8-bit values (using 8 registers at a time)
         }
     }
     // TODO: Ugly
     for (size_t i = 0; i < 8; i++) {
-        _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
-        _mm256_storeu_si256((__m256i *)(unions_tmp + (i * 32)), unions_result[i]);
+        _mm256_storeu_si256((__m256i *)(popcnt_tmp + (i * 32)), popcnt_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
-        distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
+        distances_tmp[i] = popcnt_tmp;
     }
 }
 
-// TODO: Change to avx512?
-
-
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-// Comments:
-//          This version does 4 shuffles
-//          4 shuffles vs 2 popcounts (version above)
-//          ZEN 4 | SHUFFLE: 2 cycles p1,2 - POPCNT: 2 cycles p0,1
-//                  As they are equally expensive, this kernel is slower (~15%) than using popcounts in PDX.
-//                  This still puts it at 2nd best.
-//                  What if we do 2 shuffles + 1 popcount to use port0?
-//          SPR   | SHUFFLE:
-//                  This kernel is still slower (10%) than using popcounts
-//                  Are the shuffles being a bottleneck?
-// For some reason using AVX512 here hurts performance quite badly
-// but only when the vectors exceed the size of the cache
 void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
-    __m256i unions_result[8];
     // Load initial values
     for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
         intersections_result[i] = _mm256_set1_epi8(0);
-        unions_result[i] = _mm256_set1_epi8(0);
     }
 //    for (size_t dim = 0; dim != 32; dim++){
 //        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
@@ -143,11 +118,10 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 //    }
     // TODO: Ugly
     for (size_t i = 0; i < 8; i++) {
-        _mm256_storeu_si256((__m256i *)(intersections_tmp + (i * 32)), intersections_result[i]);
-        _mm256_storeu_si256((__m256i *)(unions_tmp + (i * 32)), unions_result[i]);
+        _mm256_storeu_si256((__m256i *)(popcnt_tmp + (i * 32)), intersections_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
-        distances_tmp[i] = (unions_tmp[i] != 0) ? 1 - (float)intersections_tmp[i] / (float)unions_tmp[i] : 1.0f;
+        distances_tmp[i] = popcnt_tmp[i];
     }
 }
 
@@ -221,11 +195,8 @@ float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 ///////////////////////////////
 ///////////////////////////////
 
-static uint8_t intersections_tmp_512_a[256];
-static uint8_t intersections_tmp_512_b[256];
-
-static uint8_t unions_tmp_512_a[256];
-static uint8_t unions_tmp_512_b[256];
+static uint8_t popcnt_tmp_512_a[256];
+static uint8_t popcnt_tmp_512_b[256];
 
 float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
@@ -269,25 +240,19 @@ float hamming_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 
 
 void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m512i intersections_result_a[4];
-    __m512i intersections_result_b[4];
-    __m512i unions_result_a[4];
-    __m512i unions_result_b[4];
+    __m512i popcnt_result_a[4];
+    __m512i popcnt_result_b[4];
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
-        intersections_result_a[i] = _mm512_setzero_si512();
-        intersections_result_b[i] = _mm512_setzero_si512();
-        unions_result_a[i] = _mm512_setzero_si512();
-        unions_result_b[i] = _mm512_setzero_si512();
+        popcnt_result_a[i] = _mm512_setzero_si512();
+        popcnt_result_b[i] = _mm512_setzero_si512();
     }
     // Word 0 to 31
     for (size_t dim = 0; dim != 32; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
-            unions_result_a[i] = _mm512_add_epi8(unions_result_a[i], union_);
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            popcnt_result_a[i] = _mm512_add_epi8(popcnt_result_a[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
@@ -296,25 +261,19 @@ void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
-            unions_result_b[i] = _mm512_add_epi8(unions_result_b[i], union_);
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            popcnt_result_b[i] = _mm512_add_epi8(popcnt_result_b[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
     // TODO: Ugly
     for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_512_a + (i * 64)), intersections_result_a[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_512_a + (i * 64)), unions_result_a[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_512_b + (i * 64)), intersections_result_b[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_512_b + (i * 64)), unions_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(popcnt_tmp_512_a + (i * 64)), popcnt_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(popcnt_tmp_512_b + (i * 64)), popcnt_result_b[i]);
     }
     // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
     for (size_t i = 0; i < 256; i++){
-        float intersection = intersections_tmp_512_a[i] + intersections_tmp_512_b[i];
-        float union_ = unions_tmp_512_a[i] + unions_tmp_512_b[i];
-        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
+        distances_tmp[i] = popcnt_tmp_512_a[i] + popcnt_tmp_512_b[i];
     }
 }
 
@@ -326,136 +285,32 @@ void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 ///////////////////////////////
 ///////////////////////////////
 
-static uint8_t intersections_tmp_1024_a[256];
-static uint8_t intersections_tmp_1024_b[256];
-static uint8_t intersections_tmp_1024_c[256];
-static uint8_t intersections_tmp_1024_d[256];
-
-static uint8_t unions_tmp_1024_a[256];
-static uint8_t unions_tmp_1024_b[256];
-static uint8_t unions_tmp_1024_c[256];
-static uint8_t unions_tmp_1024_d[256];
-
-//// 1-to-256 vectors
-//// second_vector is a 256*1024 matrix in a column-major layout
-//// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-//void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-//    __m256i intersections_result_a[8];
-//    __m256i intersections_result_b[8];
-//    __m256i intersections_result_c[8];
-//    __m256i intersections_result_d[8];
-//    __m256i unions_result_a[8];
-//    __m256i unions_result_b[8];
-//    __m256i unions_result_c[8];
-//    __m256i unions_result_d[8];
-//    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
-//        intersections_result_a[i] = _mm256_set1_epi8(0);
-//        intersections_result_b[i] = _mm256_set1_epi8(0);
-//        intersections_result_c[i] = _mm256_set1_epi8(0);
-//        intersections_result_d[i] = _mm256_set1_epi8(0);
-//        unions_result_a[i] = _mm256_set1_epi8(0);
-//        unions_result_b[i] = _mm256_set1_epi8(0);
-//        unions_result_c[i] = _mm256_set1_epi8(0);
-//        unions_result_d[i] = _mm256_set1_epi8(0);
-//    }
-//    // Word 0 to 31
-//    for (size_t dim = 0; dim != 32; dim++){
-//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 8; i++){
-//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-//            intersections_result_a[i] = _mm256_add_epi8(intersections_result_a[i], intersection);
-//            unions_result_a[i] = _mm256_add_epi8(unions_result_a[i], union_);
-//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-//        }
-//    }
-//    // Word 32 to 63
-//    for (size_t dim = 32; dim != 64; dim++){
-//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 8; i++){
-//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-//            intersections_result_b[i] = _mm256_add_epi8(intersections_result_b[i], intersection);
-//            unions_result_b[i] = _mm256_add_epi8(unions_result_b[i], union_);
-//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-//        }
-//    }
-//    // Word 64 to 95
-//    for (size_t dim = 64; dim != 96; dim++){
-//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 8; i++){
-//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-//            intersections_result_c[i] = _mm256_add_epi8(intersections_result_c[i], intersection);
-//            unions_result_c[i] = _mm256_add_epi8(unions_result_c[i], union_);
-//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-//        }
-//    }
-//    // Word 96 to 127
-//    for (size_t dim = 96; dim != 128; dim++){
-//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 8; i++){
-//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-//            __m256i intersection = _mm256_popcnt_epi8(_mm256_and_epi64(first, second));
-//            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
-//            intersections_result_d[i] = _mm256_add_epi8(intersections_result_d[i], intersection);
-//            unions_result_d[i] = _mm256_add_epi8(unions_result_d[i], union_);
-//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-//        }
-//    }
-//    // TODO: Ugly
-//    for (size_t i = 0; i < 8; i++) {
-//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_a + (i * 32)), intersections_result_a[i]);
-//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_a + (i * 32)), unions_result_a[i]);
-//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_b + (i * 32)), intersections_result_b[i]);
-//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_b + (i * 32)), unions_result_b[i]);
-//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_c + (i * 32)), intersections_result_c[i]);
-//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_c + (i * 32)), unions_result_c[i]);
-//        _mm256_storeu_si256((__m256i *)(intersections_tmp_1024_d + (i * 32)), intersections_result_d[i]);
-//        _mm256_storeu_si256((__m256i *)(unions_tmp_1024_d + (i * 32)), unions_result_d[i]);
-//    }
-//    // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
-//    for (size_t i = 0; i < 256; i++){
-//        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
-//        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
-//        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
-//    }
-//}
+static uint8_t popcnt_tmp_1024_a[256];
+static uint8_t popcnt_tmp_1024_b[256];
+static uint8_t popcnt_tmp_1024_c[256];
+static uint8_t popcnt_tmp_1024_d[256];
 
 // 1-to-256 vectors
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
 void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m512i intersections_result_a[4];
-    __m512i intersections_result_b[4];
-    __m512i intersections_result_c[4];
-    __m512i intersections_result_d[4];
-    __m512i unions_result_a[4];
-    __m512i unions_result_b[4];
-    __m512i unions_result_c[4];
-    __m512i unions_result_d[4];
+    __m512i popcnt_result_a[4];
+    __m512i popcnt_result_b[4];
+    __m512i popcnt_result_c[4];
+    __m512i popcnt_result_d[4];
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
-        intersections_result_a[i] = _mm512_setzero_si512();
-        intersections_result_b[i] = _mm512_setzero_si512();
-        intersections_result_c[i] = _mm512_setzero_si512();
-        intersections_result_d[i] = _mm512_setzero_si512();
-        unions_result_a[i] = _mm512_setzero_si512();
-        unions_result_b[i] = _mm512_setzero_si512();
-        unions_result_c[i] = _mm512_setzero_si512();
-        unions_result_d[i] = _mm512_setzero_si512();
+        popcnt_result_a[i] = _mm512_setzero_si512();
+        popcnt_result_b[i] = _mm512_setzero_si512();
+        popcnt_result_c[i] = _mm512_setzero_si512();
+        popcnt_result_d[i] = _mm512_setzero_si512();
     }
     // Word 0 to 31
     for (size_t dim = 0; dim != 32; dim++){
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_a[i] = _mm512_add_epi8(intersections_result_a[i], intersection);
-            unions_result_a[i] = _mm512_add_epi8(unions_result_a[i], union_);
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            popcnt_result_a[i] = _mm512_add_epi8(popcnt_result_a[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
@@ -464,10 +319,8 @@ void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_b[i] = _mm512_add_epi8(intersections_result_b[i], intersection);
-            unions_result_b[i] = _mm512_add_epi8(unions_result_b[i], union_);
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            popcnt_result_b[i] = _mm512_add_epi8(popcnt_result_b[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
@@ -476,10 +329,8 @@ void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
-            unions_result_c[i] = _mm512_add_epi8(unions_result_c[i], union_);
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            popcnt_result_c[i] = _mm512_add_epi8(popcnt_result_c[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
@@ -488,29 +339,21 @@ void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
         for (size_t i = 0; i < 4; i++){
             __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
-            unions_result_d[i] = _mm512_add_epi8(unions_result_d[i], union_);
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
+            popcnt_result_d[i] = _mm512_add_epi8(popcnt_result_d[i], popcnt_);
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
     // TODO: Ugly
     for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_a + (i * 64)), unions_result_a[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_b + (i * 64)), unions_result_b[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_c + (i * 64)), unions_result_c[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_d + (i * 64)), unions_result_d[i]);
+        _mm512_storeu_si512((__m512i *)(popcnt_tmp_1024_a + (i * 64)), popcnt_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(popcnt_tmp_1024_b + (i * 64)), popcnt_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(popcnt_tmp_1024_c + (i * 64)), popcnt_result_c[i]);
+        _mm512_storeu_si512((__m512i *)(popcnt_tmp_1024_d + (i * 64)), popcnt_result_d[i]);
     }
     // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
     for (size_t i = 0; i < 256; i++){
-        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
-        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
-        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
+        distances_tmp[i] = popcnt_tmp_1024_a[i] + popcnt_tmp_1024_b[i] + popcnt_tmp_1024_c[i] + popcnt_tmp_1024_d[i];
     }
 }
 
