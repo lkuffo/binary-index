@@ -168,8 +168,8 @@ enum JaccardKernel {
     // 512
     JACCARD_B512_VPSHUFB_SAD,
     JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED,
-    JACCARD_B512_VPOPCNTQ, // TODO
-    JACCARD_B512_VPOPCNTQ_PRECOMPUTED, // TODO
+    JACCARD_B512_VPOPCNTQ, 
+    JACCARD_B512_VPOPCNTQ_PRECOMPUTED, 
     JACCARD_B512_VPOPCNTQ_PDX, // TODO
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX, // TODO
     JACCARD_B512_VPSHUFB_PDX, // TODO
@@ -227,6 +227,8 @@ void jaccard_b256_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t c
 //
 // 512 region
 //
+float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+float jaccard_b512_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
@@ -518,6 +520,16 @@ def main(
 
     kernels_cpp_512d = [
         (
+            "JACCARD_B512_VPOPCNTQ",
+            cppyy.gbl.jaccard_b512_vpopcntq,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ
+        ),
+        (
+            "JACCARD_B512_VPOPCNTQ_PRECOMPUTED",
+            cppyy.gbl.jaccard_b512_vpopcntq_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ_PRECOMPUTED
+        ),
+        (
             "JACCARD_B512_VPSHUFB_SAD",
             cppyy.gbl.jaccard_b512_vpshufb_sad,
             cppyy.gbl.JaccardKernel.JACCARD_B512_VPSHUFB_SAD
@@ -558,14 +570,14 @@ def main(
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ
         ),
         (
-            "JACCARD_B1024_VPOPCNTQ_VPSHUFB",
-            cppyy.gbl.jaccard_b1024_vpopcntq_vpshufb,
-            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_VPSHUFB
-        ),
-        (
             "JACCARD_B1024_VPOPCNTQ_PRECOMPUTED",
             cppyy.gbl.jaccard_b1024_vpopcntq_precomputed,
             cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_PRECOMPUTED
+        ),
+        (
+            "JACCARD_B1024_VPOPCNTQ_VPSHUFB",
+            cppyy.gbl.jaccard_b1024_vpopcntq_vpshufb,
+            cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ_VPSHUFB
         ),
         (
             "JACCARD_B1024_VPSHUFB_SAD",
@@ -652,7 +664,7 @@ def main(
         )
     ]
     standalone_kernels_cpp_pdx_512d = [
-        
+
     ]
     standalone_kernels_cpp_pdx_1024d = [
         (
