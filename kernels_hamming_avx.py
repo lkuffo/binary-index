@@ -460,11 +460,11 @@ def main(
             cppyy.gbl.hamming_b512_vpopcntq_pdx,
             cppyy.gbl.HammingKernel.HAMMING_B512_VPOPCNTQ_PDX
         ),
-        # (
-        #     "HAMMING_B512_VPSHUFB_PDX",
-        #     cppyy.gbl.hamming_b512_vpshufb_pdx,
-        #     cppyy.gbl.HammingKernel.HAMMING_B512_VPSHUFB_PDX
-        # ),
+        (
+            "HAMMING_B512_VPSHUFB_PDX",
+            cppyy.gbl.hamming_b512_vpshufb_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B512_VPSHUFB_PDX
+        ),
     ]
     standalone_kernels_cpp_pdx_1024d = [
         (
@@ -472,11 +472,11 @@ def main(
             cppyy.gbl.hamming_b1024_vpopcntq_pdx,
             cppyy.gbl.HammingKernel.HAMMING_B1024_VPOPCNTQ_PDX
         ),
-        # (
-        #     "HAMMING_B1024_VPSHUFB_PDX",
-        #     cppyy.gbl.hamming_b1024_vpshufb_pdx,
-        #     cppyy.gbl.HammingKernel.HAMMING_B1024_VPSHUFB_PDX
-        # ),
+        (
+            "HAMMING_B1024_VPSHUFB_PDX",
+            cppyy.gbl.hamming_b1024_vpshufb_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B1024_VPSHUFB_PDX
+        ),
     ]
 
     # Group kernels by dimension:

@@ -6,6 +6,9 @@
 #include <vector>
 #include <immintrin.h>
 
+#include "jaccard_nibble_luts_avx2.h"
+#include "jaccard_nibble_luts_avx512.h"
+
 struct KNNCandidate {
     uint32_t index;
     float distance;
@@ -78,46 +81,6 @@ void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-//void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-//    __m256i low_mask = _mm256_set1_epi8(0x0f);
-//    __m256i popcnt_result[8];
-//    __m256i lookup = _mm256_set_epi8(
-//        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
-//        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-//    // Load initial values
-//    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
-//        popcnt_result[i] = _mm256_set1_epi8(0);
-//    }
-//    for (size_t dim = 0; dim != 32; dim++){
-//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-//
-//        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
-//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-//            __m256i xor_ = _mm256_xor_epi64(first, second);
-//
-//            // Getting nibbles from data
-//            __m256i second_low = _mm256_and_si256(xor_, low_mask);
-//            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(xor_, 4), low_mask);
-//
-//            __m256i popcnt_ = _mm256_add_epi8(
-//                _mm256_shuffle_epi8(lookup, second_low),
-//                _mm256_shuffle_epi8(lookup, second_high)
-//            );
-//
-//            popcnt_result[i] = _mm256_add_epi8(popcnt_result[i], popcnt_);
-//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-//        }
-//    }
-//    // TODO: Ugly
-//    for (size_t i = 0; i < 8; i++) {
-//        _mm256_storeu_si256((__m256i *)(popcnt_tmp + (i * 32)), popcnt_result[i]);
-//    }
-//    for (size_t i = 0; i < 256; i++){
-//        distances_tmp[i] = popcnt_tmp[i];
-//    }
-//}
-
-
 void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i popcnt_result[4];
@@ -310,6 +273,70 @@ void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 }
 
 
+// 1-to-256 vectors
+// second_vector is a 256*256 matrix in a column-major layout
+void hamming_b512_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m512i low_mask = _mm512_set1_epi8(0x0f);
+    __m512i popcnt_result_a[4];
+    __m512i popcnt_result_b[4];
+    __m512i lookup = _mm512_set_epi8(
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    // Load initial values
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
+        popcnt_result_a[i] = _mm512_setzero_si512();
+        popcnt_result_b[i] = _mm512_setzero_si512();
+    }
+    for (size_t dim = 0; dim != 32; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
+            );
+            popcnt_result_a[i] = _mm512_add_epi8(popcnt_result_a[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    for (size_t dim = 32; dim != 64; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
+            );
+            popcnt_result_b[i] = _mm512_add_epi8(popcnt_result_b[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512(popcnt_tmp_512_a + (i * 64), popcnt_result_a[i]);
+        _mm512_storeu_si512(popcnt_tmp_512_b + (i * 64), popcnt_result_b[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = popcnt_tmp_512_a[i] + popcnt_tmp_512_b[i];
+    }
+}
+
+
 
 ///////////////////////////////
 ///////////////////////////////
@@ -389,6 +416,111 @@ void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     }
 }
 
+void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m512i low_mask = _mm512_set1_epi8(0x0f);
+    __m512i popcnt_result_a[4];
+    __m512i popcnt_result_b[4];
+    __m512i popcnt_result_c[4];
+    __m512i popcnt_result_d[4];
+    __m512i lookup = _mm512_set_epi8(
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    // Load initial values
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
+        popcnt_result_a[i] = _mm512_setzero_si512();
+        popcnt_result_b[i] = _mm512_setzero_si512();
+        popcnt_result_c[i] = _mm512_setzero_si512();
+        popcnt_result_d[i] = _mm512_setzero_si512();
+    }
+    for (size_t dim = 0; dim != 32; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
+            );
+            popcnt_result_a[i] = _mm512_add_epi8(popcnt_result_a[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    for (size_t dim = 32; dim != 64; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
+            );
+            popcnt_result_b[i] = _mm512_add_epi8(popcnt_result_b[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    for (size_t dim = 64; dim != 96; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
+            );
+            popcnt_result_c[i] = _mm512_add_epi8(popcnt_result_c[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    for (size_t dim = 96; dim != 128; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
+            );
+            popcnt_result_d[i] = _mm512_add_epi8(popcnt_result_d[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512(popcnt_tmp_512_a + (i * 64), popcnt_result_a[i]);
+        _mm512_storeu_si512(popcnt_tmp_512_b + (i * 64), popcnt_result_b[i]);
+        _mm512_storeu_si512(popcnt_tmp_512_c + (i * 64), popcnt_result_c[i]);
+        _mm512_storeu_si512(popcnt_tmp_512_d + (i * 64), popcnt_result_d[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = popcnt_tmp_512_a[i] + popcnt_tmp_512_b[i] + popcnt_tmp_512_c[i] + popcnt_tmp_512_d[i];
+    }
+}
+
 
 float hamming_u8x128_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
@@ -459,6 +591,49 @@ float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *seco
         _mm512_sad_epu8(end_popcount, _mm512_setzero_si512()));
 
     return _mm512_reduce_add_epi64(popcnt);
+}
+
+// 1-to-256 vectors
+// second_vector is a 256*256 matrix in a column-major layout
+void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m512i low_mask = _mm512_set1_epi8(0x0f);
+    __m512i popcnt_result[4];
+    __m512i lookup = _mm512_set_epi8(
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    // Load initial values
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
+        popcnt_result[i] = _mm512_setzero_si512();
+    }
+    for (size_t dim = 0; dim != 32; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
+            );
+
+            popcnt_result[i] = _mm512_add_epi8(popcnt_result[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512(popcnt_tmp + (i * 64), popcnt_result[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = popcnt_tmp[i];
+    }
 }
 
 
@@ -651,6 +826,10 @@ std::vector<KNNCandidate> hamming_pdx_standalone_partial_sort(
                 hamming_b512_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == HAMMING_B256_VPSHUFB_PDX){
                 hamming_b256_vpshufb_pdx(query, data);
+            } else if constexpr (kernel == HAMMING_B512_VPSHUFB_PDX){
+                hamming_b512_vpshufb_pdx(query, data);
+            } else if constexpr (kernel == HAMMING_B1024_VPSHUFB_PDX){
+                hamming_b1024_vpshufb_pdx(query, data);
             }
 
             // TODO: Ugly
@@ -695,8 +874,6 @@ std::vector<KNNCandidate> hamming_standalone(
             return hamming_standalone_partial_sort<HAMMING_B256_VPOPCNTQ, 32>(first_vector, second_vector, num_queries, num_vectors, knn);
         case HAMMING_B256_VPOPCNTQ_PDX:
             return hamming_pdx_standalone_partial_sort<HAMMING_B256_VPOPCNTQ_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
-        case HAMMING_B256_VPSHUFB_PDX:
-            return hamming_pdx_standalone_partial_sort<HAMMING_B256_VPSHUFB_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
 
 
         case HAMMING_B512_VPSHUFB_SAD: // 512
@@ -705,7 +882,8 @@ std::vector<KNNCandidate> hamming_standalone(
             return hamming_standalone_partial_sort<HAMMING_B512_VPOPCNTQ, 64>(first_vector, second_vector, num_queries, num_vectors, knn);
         case HAMMING_B512_VPOPCNTQ_PDX:
             return hamming_pdx_standalone_partial_sort<HAMMING_B512_VPOPCNTQ_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
-
+        case HAMMING_B512_VPSHUFB_PDX:
+            return hamming_pdx_standalone_partial_sort<HAMMING_B512_VPSHUFB_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
 
 
         case HAMMING_U8X128_C: // 1024
@@ -722,6 +900,9 @@ std::vector<KNNCandidate> hamming_standalone(
             return hamming_standalone_partial_sort<HAMMING_U64X16_CSA15_CPP, 128>(first_vector, second_vector, num_queries, num_vectors, knn);
         case HAMMING_B1024_VPOPCNTQ_PDX:
             return hamming_pdx_standalone_partial_sort<HAMMING_B1024_VPOPCNTQ_PDX, 128, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case HAMMING_B1024_VPSHUFB_PDX:
+            return hamming_pdx_standalone_partial_sort<HAMMING_B1024_VPSHUFB_PDX, 128, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+
 
         default:
             return hamming_standalone_partial_sort<HAMMING_U64X4_C, 32>(first_vector, second_vector, num_queries, num_vectors, knn);
