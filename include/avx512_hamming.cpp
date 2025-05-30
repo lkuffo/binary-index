@@ -249,21 +249,21 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         } else if (first_high == 7){
             lut_xor_high = inline_m512_xor_lut_7;
         } else if (first_high == 8){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_7);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_7);
         } else if (first_high == 9){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_6);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_6);
         } else if (first_high == 10){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_5);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_5);
         } else if (first_high == 11){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_4);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_4);
         } else if (first_high == 12){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_3);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_3);
         } else if (first_high == 13){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_2);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_2);
         } else if (first_high == 14){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_1);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_1);
         } else if (first_high == 15){
-            lut_xor_high = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_0);
+            lut_xor_high = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_0);
         }
         if (first_low == 1){
             lut_xor_low = inline_m512_xor_lut_1;
@@ -280,21 +280,21 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         } else if (first_low == 7){
             lut_xor_low = inline_m512_xor_lut_7;
         } else if (first_low == 8){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_7);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_7);
         } else if (first_low == 9){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_6);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_6);
         } else if (first_low == 10){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_5);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_5);
         } else if (first_low == 11){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_4);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_4);
         } else if (first_low == 12){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_3);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_3);
         } else if (first_low == 13){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_2);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_2);
         } else if (first_low == 14){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_1);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_1);
         } else if (first_low == 15){
-            lut_xor_low = __mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_0);
+            lut_xor_low = _mm512_sub_epi8(vector_of_4, inline_m512_xor_lut_0);
         }
 
 //        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
