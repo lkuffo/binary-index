@@ -364,11 +364,11 @@ def main(
         #     cppyy.gbl.hamming_u64x4_c,
         #     cppyy.gbl.HammingKernel.HAMMING_U64X4_C
         # ),
-        # (
-        #     "HAMMING_B256_VPSHUFB_SAD",
-        #     cppyy.gbl.hamming_b256_vpshufb_sad,
-        #     cppyy.gbl.HammingKernel.HAMMING_B256_VPSHUFB_SAD
-        # ),
+        (
+            "HAMMING_B256_VPSHUFB_SAD",
+            cppyy.gbl.hamming_b256_vpshufb_sad,
+            cppyy.gbl.HammingKernel.HAMMING_B256_VPSHUFB_SAD
+        ),
         (
             "HAMMING_B256_VPOPCNTQ",
             cppyy.gbl.hamming_b256_vpopcntq,
@@ -382,11 +382,11 @@ def main(
             cppyy.gbl.hamming_b512_vpopcntq,
             cppyy.gbl.HammingKernel.HAMMING_B512_VPOPCNTQ
         ),
-        # (
-        #     "HAMMING_B512_VPSHUFB_SAD",
-        #     cppyy.gbl.hamming_b512_vpshufb_sad,
-        #     cppyy.gbl.HammingKernel.HAMMING_B512_VPSHUFB_SAD
-        # ),
+        (
+            "HAMMING_B512_VPSHUFB_SAD",
+            cppyy.gbl.hamming_b512_vpshufb_sad,
+            cppyy.gbl.HammingKernel.HAMMING_B512_VPSHUFB_SAD
+        ),
     ]
 
     kernels_cpp_1024d = [
@@ -417,11 +417,11 @@ def main(
             cppyy.gbl.hamming_b1024_vpopcntq,
             cppyy.gbl.HammingKernel.HAMMING_B1024_VPOPCNTQ
         ),
-        # (
-        #     "HAMMING_B1024_VPSHUFB_SAD",
-        #     cppyy.gbl.hamming_b1024_vpshufb_sad,
-        #     cppyy.gbl.HammingKernel.HAMMING_B1024_VPSHUFB_SAD
-        # ),
+        (
+            "HAMMING_B1024_VPSHUFB_SAD",
+            cppyy.gbl.hamming_b1024_vpshufb_sad,
+            cppyy.gbl.HammingKernel.HAMMING_B1024_VPSHUFB_SAD
+        ),
     ]
     kernels_cpp_1536d = [
         # C++:

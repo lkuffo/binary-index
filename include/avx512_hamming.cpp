@@ -183,32 +183,23 @@ float hamming_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
     __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
-    __m256i intersection = _mm256_and_epi64(first, second);
-    __m256i union_ = _mm256_or_epi64(first, second);
+    __m256i xor_ = _mm256_xor_epi64(first, second);
 
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i lookup = _mm256_set_epi8(
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
-    __m256i intersection_low = _mm256_and_si256(intersection, low_mask);
-    __m256i intersection_high = _mm256_and_si256(_mm256_srli_epi16(intersection, 4), low_mask);
-    __m256i union_low = _mm256_and_si256(union_, low_mask);
-    __m256i union_high = _mm256_and_si256(_mm256_srli_epi16(union_, 4), low_mask);
+    __m256i xor_low = _mm256_and_si256(xor_, low_mask);
+    __m256i xor_high = _mm256_and_si256(_mm256_srli_epi16(xor_, 4), low_mask);
 
-    __m256i intersection_popcount = _mm256_add_epi8(
-        _mm256_shuffle_epi8(lookup, intersection_low),
-        _mm256_shuffle_epi8(lookup, intersection_high));
-    __m256i union_popcount = _mm256_add_epi8(
-        _mm256_shuffle_epi8(lookup, union_low),
-        _mm256_shuffle_epi8(lookup, union_high));
+    __m256i popcnt_ = _mm256_add_epi8(
+        _mm256_shuffle_epi8(lookup, xor_low),
+        _mm256_shuffle_epi8(lookup, xor_high));
 
-    __m256i intersection_counts = _mm256_sad_epu8(intersection_popcount, _mm256_setzero_si256());
-    __m256i union_counts = _mm256_sad_epu8(union_popcount, _mm256_setzero_si256());
-    return 1.f - (_mm256_reduce_add_epi64(intersection_counts) + 1.f) / (_mm256_reduce_add_epi64(union_counts) + 1.f);
+    __m256i popcnt = _mm256_sad_epu8(popcnt_, _mm256_setzero_si256());
+    return _mm256_reduce_add_epi64(popcnt);
 }
-
-
 
 
 // Define the AVX-512 variant using the `vpopcntq` instruction.
@@ -240,8 +231,7 @@ float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
 
-    __m512i intersection_start = _mm512_and_epi64(first_start, second_start);
-    __m512i union_start = _mm512_or_epi64(first_start, second_start);
+    __m512i xor_ = _mm512_xor_epi64(first_start, second_start);
 
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i lookup = _mm512_set_epi8(
@@ -250,23 +240,16 @@ float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
-    __m512i intersection_start_low = _mm512_and_si512(intersection_start, low_mask);
-    __m512i intersection_start_high = _mm512_and_si512(_mm512_srli_epi16(intersection_start, 4), low_mask);
+    __m512i xor_low = _mm512_and_si512(xor_, low_mask);
+    __m512i xor_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
 
-    __m512i union_start_low = _mm512_and_si512(union_start, low_mask);
-    __m512i union_start_high = _mm512_and_si512(_mm512_srli_epi16(union_start, 4), low_mask);
+    __m512i popcnt_ = _mm512_add_epi8(
+        _mm512_shuffle_epi8(lookup, xor_low),
+        _mm512_shuffle_epi8(lookup, xor_high));
 
-    __m512i intersection_start_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, intersection_start_low),
-        _mm512_shuffle_epi8(lookup, intersection_start_high));
-    __m512i union_start_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, union_start_low),
-        _mm512_shuffle_epi8(lookup, union_start_high));
+    __m512i popcnt = _mm512_sad_epu8(popcnt_, _mm512_setzero_si512());
 
-    __m512i intersection = _mm512_sad_epu8(intersection_start_popcount, _mm512_setzero_si512());
-    __m512i union_ = _mm512_sad_epu8(union_start_popcount, _mm512_setzero_si512());
-
-    return 1.f - (_mm512_reduce_add_epi64(intersection) + 1.f) / (_mm512_reduce_add_epi64(union_) + 1.f);
+    return _mm512_reduce_add_epi64(popcnt);
 }
 
 
@@ -573,10 +556,8 @@ float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *seco
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
     __m512i second_end = _mm512_loadu_si512((__m512i const*)(second_vector + 64));
 
-    __m512i intersection_start = _mm512_and_epi64(first_start, second_start);
-    __m512i intersection_end = _mm512_and_epi64(first_end, second_end);
-    __m512i union_start = _mm512_or_epi64(first_start, second_start);
-    __m512i union_end = _mm512_or_epi64(first_end, second_end);
+    __m512i xor_start = _mm512_xor_epi64(first_start, second_start);
+    __m512i xor_end = _mm512_xor_epi64(first_end, second_end);
 
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i lookup = _mm512_set_epi8(
@@ -585,37 +566,24 @@ float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *seco
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
-    __m512i intersection_start_low = _mm512_and_si512(intersection_start, low_mask);
-    __m512i intersection_start_high = _mm512_and_si512(_mm512_srli_epi16(intersection_start, 4), low_mask);
-    __m512i intersection_end_low = _mm512_and_si512(intersection_end, low_mask);
-    __m512i intersection_end_high = _mm512_and_si512(_mm512_srli_epi16(intersection_end, 4), low_mask);
+    __m512i xor_start_low = _mm512_and_si512(xor_start, low_mask);
+    __m512i xor_start_high = _mm512_and_si512(_mm512_srli_epi16(xor_start, 4), low_mask);
+    __m512i xor_end_low = _mm512_and_si512(xor_end, low_mask);
+    __m512i xor_end_high = _mm512_and_si512(_mm512_srli_epi16(xor_end, 4), low_mask);
 
-    __m512i union_start_low = _mm512_and_si512(union_start, low_mask);
-    __m512i union_start_high = _mm512_and_si512(_mm512_srli_epi16(union_start, 4), low_mask);
-    __m512i union_end_low = _mm512_and_si512(union_end, low_mask);
-    __m512i union_end_high = _mm512_and_si512(_mm512_srli_epi16(union_end, 4), low_mask);
 
-    __m512i intersection_start_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, intersection_start_low),
-        _mm512_shuffle_epi8(lookup, intersection_start_high));
-    __m512i intersection_end_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, intersection_end_low),
-        _mm512_shuffle_epi8(lookup, intersection_end_high));
-    __m512i union_start_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, union_start_low),
-        _mm512_shuffle_epi8(lookup, union_start_high));
-    __m512i union_end_popcount = _mm512_add_epi8(
-        _mm512_shuffle_epi8(lookup, union_end_low),
-        _mm512_shuffle_epi8(lookup, union_end_high));
+    __m512i start_popcount = _mm512_add_epi8(
+        _mm512_shuffle_epi8(lookup, xor_start_low),
+        _mm512_shuffle_epi8(lookup, xor_start_high));
+    __m512i end_popcount = _mm512_add_epi8(
+        _mm512_shuffle_epi8(lookup, xor_end_low),
+        _mm512_shuffle_epi8(lookup, xor_end_high));
 
-    __m512i intersection = _mm512_add_epi64(
-        _mm512_sad_epu8(intersection_start_popcount, _mm512_setzero_si512()),
-        _mm512_sad_epu8(intersection_end_popcount, _mm512_setzero_si512()));
-    __m512i union_ = _mm512_add_epi64(
-        _mm512_sad_epu8(union_start_popcount, _mm512_setzero_si512()),
-        _mm512_sad_epu8(union_end_popcount, _mm512_setzero_si512()));
+    __m512i popcnt = _mm512_add_epi64(
+        _mm512_sad_epu8(start_popcount, _mm512_setzero_si512()),
+        _mm512_sad_epu8(end_popcount, _mm512_setzero_si512()));
 
-    return 1.f - (_mm512_reduce_add_epi64(intersection) + 1.f) / (_mm512_reduce_add_epi64(union_) + 1.f);
+    return _mm512_reduce_add_epi64(popcnt);
 }
 
 
