@@ -144,18 +144,18 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
         uint8_t first_low = first_vector[dim] & 0x0F;
         // Choose lookup tables
-        uint8_t lut_high = 0;
-        uint8_t lut_low = 0;
-        if (first_high < 8){
-            lut_high = 0;
-        } else {
-            lut_high = 1;
-        }
-        if (first_low < 8){
-            lut_low = 0;
-        } else {
-            lut_low = 1;
-        }
+        volatile uint8_t lut_high = 0;
+        volatile uint8_t lut_low = 2;
+//        if (first_high < 8){
+//            lut_high = 0;
+//        } else {
+//            lut_high = 1;
+//        }
+//        if (first_low < 8){
+//            lut_low = 0;
+//        } else {
+//            lut_low = 1;
+//        }
         __m512i lut_xor_high = m512_xor_lookup_tables[lut_high];
         __m512i lut_xor_low = m512_xor_lookup_tables[lut_low];
 
