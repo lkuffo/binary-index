@@ -174,7 +174,7 @@ enum JaccardKernel {
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B512_VPSHUFB_PDX, // TODO
     JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX,
-    JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, // TODO
+    JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, 
     // 1024
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
@@ -234,6 +234,7 @@ float jaccard_b512_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t 
 void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b512_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 void jaccard_b512_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const *second_popcounts);
+void jaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 
 //
@@ -672,6 +673,11 @@ def main(
             "JACCARD_B512_VPOPCNTQ_PDX",
             cppyy.gbl.jaccard_b512_vpopcntq_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ_PDX
+        ),
+        (
+            "JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX",
+            cppyy.gbl.jaccard_b512_vpopcntq_vpshufb_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX
         ),
         (
             "JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX",

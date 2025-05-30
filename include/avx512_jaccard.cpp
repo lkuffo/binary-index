@@ -44,7 +44,7 @@ enum JaccardKernel {
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX,
     JACCARD_B512_VPSHUFB_PDX, // TODO
     JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX,
-    JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, // TODO
+    JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX,
     // 1024
     JACCARD_U8X128_C,
     JACCARD_U64X16_C,
@@ -721,6 +721,80 @@ void jaccard_b512_vpshufb_precomputed_pdx(
         float intersection = intersections_tmp_512_a[i] + intersections_tmp_512_b[i];
         float denominator = first_popcount + second_popcounts[i] - intersection;
         distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+    }
+};
+
+void jaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m256i low_mask = _mm256_set1_epi8(0x0f);
+    __m256i intersections_result_a[8];
+    __m256i intersections_result_b[8];
+    __m256i unions_result_a[8];
+    __m256i unions_result_b[8];
+    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
+        intersections_result_a[i] = _mm256_set1_epi8(0);
+        intersections_result_b[i] = _mm256_set1_epi8(0);
+        intersections_result_c[i] = _mm256_set1_epi8(0);
+        intersections_result_d[i] = _mm256_set1_epi8(0);
+        unions_result_a[i] = _mm256_set1_epi8(0);
+        unions_result_b[i] = _mm256_set1_epi8(0);
+    }
+    // Word 0 to 31
+    for (size_t dim = 0; dim != 32; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+        uint8_t first_low = first_vector[dim] & 0x0F;
+        // Choose lookup tables
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            // Getting nibbles from data
+            __m256i second_low = _mm256_and_si256(second, low_mask);
+            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
+            __m256i intersection = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_low)
+            );
+            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+            intersections_result_a[i] = _mm256_add_epi8(intersections_result_a[i], intersection);
+            unions_result_a[i] = _mm256_add_epi8(unions_result_a[i], union_);
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+   // Word 32 to 63
+    for (size_t dim = 32; dim != 64; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+        uint8_t first_low = first_vector[dim] & 0x0F;
+        // Choose lookup tables
+        __m256i lut_intersection_high = m256_intersection_lookup_tables[first_high];
+        __m256i lut_intersection_low = m256_intersection_lookup_tables[first_low];
+        for (size_t i = 0; i < 8; i++){ // 256 uint8_t values
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            // Getting nibbles from data
+            __m256i second_low = _mm256_and_si256(second, low_mask);
+            __m256i second_high = _mm256_and_si256(_mm256_srli_epi16(second, 4), low_mask);
+            __m256i intersection = _mm256_add_epi8(
+                _mm256_shuffle_epi8(lut_intersection_low, second_low),
+                _mm256_shuffle_epi8(lut_intersection_high, second_low)
+            );
+            __m256i union_ = _mm256_popcnt_epi8(_mm256_or_epi64(first, second));
+            intersections_result_b[i] = _mm256_add_epi8(intersections_result_b[i], intersection);
+            unions_result_b[i] = _mm256_add_epi8(unions_result_b[i], union_);
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 8; i++) {
+        _mm256_storeu_si256((__m256i *)(intersections_tmp_512_a + (i * 32)), intersections_result_a[i]);
+        _mm256_storeu_si256((__m256i *)(unions_tmp_512_a + (i * 32)), unions_result_a[i]);
+        _mm256_storeu_si256((__m256i *)(intersections_tmp_512_b + (i * 32)), intersections_result_b[i]);
+        _mm256_storeu_si256((__m256i *)(unions_tmp_512_b + (i * 32)), unions_result_b[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        float intersection = intersections_tmp_512_a[i] + intersections_tmp_512_b[i];
+        float union_ = unions_tmp_512_a[i] + unions_tmp_512_b[i];
+        distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
     }
 };
 
@@ -1823,6 +1897,8 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 jaccard_b512_vpopcntq_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B1024_VPOPCNTQ_VPSHUFB_PDX) {
                 jaccard_b1024_vpopcntq_vpshufb_pdx(query, data);
+            } else if constexpr (kernel == JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX) {
+                jaccard_b512_vpopcntq_vpshufb_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B256_VPSHUFB_PDX){
                 jaccard_b256_vpshufb_pdx(query, data);
             } else if constexpr (kernel == JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX){
@@ -1924,6 +2000,8 @@ std::vector<KNNCandidate> jaccard_standalone(
             return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
         case JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX:
             return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn, precomputed_popcnts);
+        case JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX:
+            return jaccard_pdx_standalone_partial_sort<JACCARD_B512_VPOPCNTQ_VPSHUFB_PDX, 64, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
 
 
 
