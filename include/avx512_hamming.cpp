@@ -147,12 +147,12 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
             );
 
             popcnt_result[i] = _mm512_add_epi8(popcnt_result[i], popcnt_);
-            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
     // TODO: Ugly
     for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512(popcnt_tmp + (i * 32), popcnt_result[i]);
+        _mm512_storeu_si512(popcnt_tmp + (i * 64), popcnt_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
         distances_tmp[i] = popcnt_tmp[i];
