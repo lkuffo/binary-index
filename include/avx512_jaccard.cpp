@@ -460,6 +460,13 @@ float jaccard_b256_vpopcntq_precomputed(
 // region: 512d kernels ///////
 ///////////////////////////////
 ///////////////////////////////
+
+static uint8_t intersections_tmp_512_a[256];
+static uint8_t intersections_tmp_512_b[256];
+
+static uint8_t unions_tmp_512_a[256];
+static uint8_t unions_tmp_512_b[256];
+
 float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -560,21 +567,13 @@ float jaccard_b512_vpopcntq_precomputed(
 void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result_a[4];
     __m512i intersections_result_b[4];
-    __m512i intersections_result_c[4];
-    __m512i intersections_result_d[4];
     __m512i unions_result_a[4];
     __m512i unions_result_b[4];
-    __m512i unions_result_c[4];
-    __m512i unions_result_d[4];
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
         intersections_result_a[i] = _mm512_setzero_si512();
         intersections_result_b[i] = _mm512_setzero_si512();
-        intersections_result_c[i] = _mm512_setzero_si512();
-        intersections_result_d[i] = _mm512_setzero_si512();
         unions_result_a[i] = _mm512_setzero_si512();
         unions_result_b[i] = _mm512_setzero_si512();
-        unions_result_c[i] = _mm512_setzero_si512();
-        unions_result_d[i] = _mm512_setzero_si512();
     }
     // Word 0 to 31
     for (size_t dim = 0; dim != 32; dim++){
@@ -600,45 +599,17 @@ void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
-    // Word 64 to 95
-    for (size_t dim = 64; dim != 96; dim++){
-        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 4; i++){
-            __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
-            unions_result_c[i] = _mm512_add_epi8(unions_result_c[i], union_);
-            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
-    // Word 96 to 127
-    for (size_t dim = 96; dim != 128; dim++){
-        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 4; i++){
-            __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            __m512i union_ = _mm512_popcnt_epi8(_mm512_or_epi64(first, second));
-            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
-            unions_result_d[i] = _mm512_add_epi8(unions_result_d[i], union_);
-            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
     // TODO: Ugly
     for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_a + (i * 64)), unions_result_a[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_b + (i * 64)), unions_result_b[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_c + (i * 64)), unions_result_c[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
-        _mm512_storeu_si512((__m512i *)(unions_tmp_1024_d + (i * 64)), unions_result_d[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_512_a + (i * 64)), intersections_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_512_a + (i * 64)), unions_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_512_b + (i * 64)), intersections_result_b[i]);
+        _mm512_storeu_si512((__m512i *)(unions_tmp_512_b + (i * 64)), unions_result_b[i]);
     }
     // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
     for (size_t i = 0; i < 256; i++){
-        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
-        float union_ = unions_tmp_1024_a[i] + unions_tmp_1024_b[i] + unions_tmp_1024_c[i] + unions_tmp_1024_d[i];
+        float intersection = intersections_tmp_512_a[i] + intersections_tmp_512_b[i];
+        float union_ = unions_tmp_512_a[i] + unions_tmp_512_b[i];
         distances_tmp[i] = (union_ != 0) ? 1 - intersection / union_ : 1.0f;
     }
 }
@@ -649,13 +620,9 @@ void jaccard_b512_vpopcntq_precomputed_pdx(
 ) {
     __m512i intersections_result_a[4];
     __m512i intersections_result_b[4];
-    __m512i intersections_result_c[4];
-    __m512i intersections_result_d[4];
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
         intersections_result_a[i] = _mm512_setzero_si512();
         intersections_result_b[i] = _mm512_setzero_si512();
-        intersections_result_c[i] = _mm512_setzero_si512();
-        intersections_result_d[i] = _mm512_setzero_si512();
     }
     // Word 0 to 31
     for (size_t dim = 0; dim != 32; dim++){
@@ -677,36 +644,14 @@ void jaccard_b512_vpopcntq_precomputed_pdx(
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
-    // Word 64 to 95
-    for (size_t dim = 64; dim != 96; dim++){
-        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 4; i++){
-            __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            intersections_result_c[i] = _mm512_add_epi8(intersections_result_c[i], intersection);
-            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
-    // Word 96 to 127
-    for (size_t dim = 96; dim != 128; dim++){
-        __m512i first = _mm512_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 4; i++){
-            __m512i second = _mm512_loadu_epi8(second_vector);
-            __m512i intersection = _mm512_popcnt_epi8(_mm512_and_epi64(first, second));
-            intersections_result_d[i] = _mm512_add_epi8(intersections_result_d[i], intersection);
-            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
-        }
-    }
     // TODO: Ugly
     for (size_t i = 0; i < 4; i++) {
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_a + (i * 64)), intersections_result_a[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_b + (i * 64)), intersections_result_b[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_c + (i * 64)), intersections_result_c[i]);
-        _mm512_storeu_si512((__m512i *)(intersections_tmp_1024_d + (i * 64)), intersections_result_d[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_512_a + (i * 64)), intersections_result_a[i]);
+        _mm512_storeu_si512((__m512i *)(intersections_tmp_512_b + (i * 64)), intersections_result_b[i]);
     }
     // TODO: Probably can use SIMD for the pairwise sum of the 4 groups
     for (size_t i = 0; i < 256; i++){
-        float intersection = intersections_tmp_1024_a[i] + intersections_tmp_1024_b[i] + intersections_tmp_1024_c[i] + intersections_tmp_1024_d[i];
+        float intersection = intersections_tmp_512_a[i] + intersections_tmp_512_b[i];
         float denominator = first_popcount + second_popcounts[i] - intersection;
         distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
     }
