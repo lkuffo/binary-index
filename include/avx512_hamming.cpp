@@ -807,7 +807,7 @@ std::vector<KNNCandidate> hamming_standalone_partial_sort(
     return result;
 }
 
-void fill_b256_xorluts(const * uint8_t query){
+void fill_b256_xorluts(const uint8_t *query){
     for (size_t d = 0; d < 32; ++i){
         uint8_t first_high = (query[d] & 0xF0) >> 4;
         uint8_t first_low = query[d] & 0x0F;
@@ -815,10 +815,10 @@ void fill_b256_xorluts(const * uint8_t query){
         __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
         __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
 
-        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((i * 2) * 64), lut_xor_high);
-        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((i * 2) + 1) * 64), lut_xor_low);
-        std::cout << ((i * 2) * 64) << "\n";
-        std::cout << (((i * 2) + 1) * 64) << "\n";
+        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((d * 2) * 64), lut_xor_high);
+        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((d * 2) + 1) * 64), lut_xor_low);
+        std::cout << ((d * 2) * 64) << "\n";
+        std::cout << (((d * 2) + 1) * 64) << "\n";
     }
 };
 
