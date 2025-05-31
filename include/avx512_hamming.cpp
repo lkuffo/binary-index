@@ -123,6 +123,11 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
     }
 }
 
+// 256 bits -> 32 words -> 64 nibbles
+// Each nibble is a LUT of 64 bytes (to fit on the AVX512 register)
+// 64 x 64 = 4096 bytes needed
+uint8_t* query_aware_b256_xorluts_avx512[4096];
+
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
@@ -802,6 +807,21 @@ std::vector<KNNCandidate> hamming_standalone_partial_sort(
     return result;
 }
 
+void fill_b256_xorluts(const * uint8_t query){
+    for (size_t d = 0; d < 32; ++i){
+        uint8_t first_high = (query[d] & 0xF0) >> 4;
+        uint8_t first_low = query[d] & 0x0F;
+
+        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
+        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
+
+        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((i * 2) * 64), lut_xor_high);
+        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((i * 2) + 1) * 64), lut_xor_low);
+        std::cout << ((i * 2) * 64) << "\n";
+        std::cout << (((i * 2) + 1) * 64) << "\n";
+    }
+};
+
 template <HammingKernel kernel=HAMMING_B256_VPOPCNTQ_PDX, int N_WORDS=32, int PDX_BLOCK_SIZE=256>
 std::vector<KNNCandidate> hamming_pdx_standalone_partial_sort(
     uint8_t const *first_vector,
@@ -814,6 +834,9 @@ std::vector<KNNCandidate> hamming_pdx_standalone_partial_sort(
     std::vector<KNNCandidate> all_distances(num_vectors);
     const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
+        if constexpr (kernel == HAMMING_B256_XORLUT_PDX){
+            fill_b256_xorluts(query);
+        }
         const uint8_t* data = first_vector;
         // Fill all_distances by direct indexing
         size_t global_offset = 0;
