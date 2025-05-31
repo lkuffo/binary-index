@@ -126,7 +126,42 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    // Nothing... just ideas that didn't work
+    __m512i low_mask = _mm512_set1_epi8(0x0f);
+    __m512i popcnt_result[4];
+    // Load initial values
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
+        popcnt_result[i] = _mm512_setzero_si512();
+    }
+
+    for (size_t dim = 0; dim != 32; dim++){
+        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+        uint8_t first_low = first_vector[dim] & 0x0F;
+        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
+        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
+
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(second, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(second, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lut_xor_low, second_low),
+                _mm512_shuffle_epi8(lut_xor_high, second_high)
+            );
+
+            popcnt_result[i] = _mm512_add_epi8(popcnt_result[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512(popcnt_tmp + (i * 64), popcnt_result[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = popcnt_tmp[i];
+    }
 }
 
 float hamming_u64x4_c(uint8_t const *a, uint8_t const *b) {

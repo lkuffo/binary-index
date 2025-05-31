@@ -455,11 +455,11 @@ def main(
             cppyy.gbl.hamming_b256_vpshufb_pdx,
             cppyy.gbl.HammingKernel.HAMMING_B256_VPSHUFB_PDX
         ),
-        # (
-        #     "HAMMING_B256_XORLUT_PDX",
-        #     cppyy.gbl.hamming_b256_xorlut_pdx,
-        #     cppyy.gbl.HammingKernel.HAMMING_B256_XORLUT_PDX
-        # ),
+        (
+            "HAMMING_B256_XORLUT_PDX",
+            cppyy.gbl.hamming_b256_xorlut_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B256_XORLUT_PDX
+        ),
     ]
     standalone_kernels_cpp_pdx_512d = [
         (
