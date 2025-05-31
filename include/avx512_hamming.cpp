@@ -808,7 +808,7 @@ std::vector<KNNCandidate> hamming_standalone_partial_sort(
 }
 
 void fill_b256_xorluts(const uint8_t *query){
-    for (size_t d = 0; d < 32; ++i){
+    for (size_t d = 0; d < 32; ++d){
         uint8_t first_high = (query[d] & 0xF0) >> 4;
         uint8_t first_low = query[d] & 0x0F;
 
