@@ -126,7 +126,7 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 // 256 bits -> 32 words -> 64 nibbles
 // Each nibble is a LUT of 64 bytes (to fit on the AVX512 register)
 // 64 x 64 = 4096 bytes needed
-uint8_t* query_aware_b256_xorluts_avx512[4096];
+static uint8_t* query_aware_b256_xorluts_avx512[4096];
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
