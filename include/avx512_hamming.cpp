@@ -817,8 +817,6 @@ void fill_b256_xorluts(const uint8_t *query){
 
         _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((d * 2) * 64), lut_xor_high);
         _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((d * 2) + 1) * 64), lut_xor_low);
-        std::cout << ((d * 2) * 64) << "\n";
-        std::cout << (((d * 2) + 1) * 64) << "\n";
     }
 };
 
