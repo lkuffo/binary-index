@@ -635,10 +635,12 @@ def main(
         # print("- passed!")
 
         warmup_repetition = get_warmup_repetition_n(len(vectors))
+        queries = vectors[:query_count].copy()
         # Provide FAISS benchmarking baselines:
         print(f"Profiling FAISS over {count:,} vectors and {query_count} queries with Hamming metric")
         stats = bench_faiss(
             vectors=vectors,
+            queries=queries,
             k=k,
             threads=threads,
             query_count=query_count,
@@ -649,7 +651,6 @@ def main(
         print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         # Analyze all the kernels:
-        queries = vectors[:query_count].copy()
         for name, _, kernel_id in kernels_cpp:
             benchmark_metadata['kernel_name'] = name
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
