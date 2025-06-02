@@ -904,7 +904,7 @@ def main(
     for ndim in ndims:
         benchmark_metadata["ndim"] = ndim
         print("-" * 80)
-        print(f"Testing {ndim:,}d kernels")
+        print(f"Testing {ndim:,}d kernels, {count} queries, {query_count}, queries")
         kernels_cpp = kernels_cpp_per_dimension.get(ndim, [])
         kernels_numba = kernels_numba_per_dimension.get(ndim, [])
         kernels_cpp_pdx = kernels_cpp_pdx.get(ndim, [])
