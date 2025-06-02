@@ -2196,12 +2196,12 @@ std::vector<KNNCandidate> jaccard_standalone_partial_sort(
         const uint8_t* data = first_vector;
         uint32_t query_popcnt;
         if constexpr (
-            kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED ||
-            kernel == JACCARD_B512_VPOPCNTQ_PRECOMPUTED ||
             kernel == JACCARD_B256_VPSHUFB_SAD_PRECOMPUTED ||
             kernel == JACCARD_B256_VPOPCNTQ_PRECOMPUTED ||
-            kernel == JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED ||
-            kernel == JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED
+            kernel == JACCARD_B512_VPOPCNTQ_PRECOMPUTED ||
+            kernel == JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED ||
+            kernel == JACCARD_B1024_VPOPCNTQ_PRECOMPUTED ||
+            kernel == JACCARD_B1024_VPSHUFB_SAD_PRECOMPUTED
         ){
                 // Simple popcount for query
                 query_popcnt = 0;
