@@ -64,29 +64,6 @@ static uint32_t distances_tmp[256];
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-//void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-//    __m256i popcnt_result[8];
-//    // Load initial values
-//    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
-//        popcnt_result[i] = _mm256_set1_epi8(0);
-//    }
-//    for (size_t dim = 0; dim != 16; dim++){
-//        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-//        for (size_t i = 0; i < 8; i++){
-//            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-//            __m256i popcnt_ = _mm256_popcnt_epi8(_mm256_xor_epi64(first, second));
-//            popcnt_result[i] = _mm256_add_epi8(popcnt_result[i], popcnt_);
-//            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
-//        }
-//    }
-//    // TODO: Ugly
-//    for (size_t i = 0; i < 8; i++) {
-//        _mm256_storeu_si256((__m256i *)(popcnt_tmp + (i * 32)), popcnt_result[i]);
-//    }
-//    for (size_t i = 0; i < 256; i++){
-//        distances_tmp[i] = popcnt_tmp[i];
-//    }
-//}
 void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i popcnt_result[4];
     // Load initial values
@@ -228,23 +205,23 @@ float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
 void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
-    __m256i popcnt_result[8];
+    __m512i popcnt_result[4];
     // Load initial values
-    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
-        popcnt_result[i] = _mm256_set1_epi8(0);
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
+        popcnt_result[i] = _mm512_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
-        __m256i first = _mm256_set1_epi8(first_vector[dim]);
-        for (size_t i = 0; i < 8; i++){
-            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
-            __m256i popcnt_ = _mm256_popcnt_epi8(_mm256_xor_epi64(first, second));
-            popcnt_result[i] = _mm256_add_epi8(popcnt_result[i], popcnt_);
-            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 4; i++){
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i popcnt_ = _mm512_popcnt_epi8(_mm512_xor_epi64(first, second));
+            popcnt_result[i] = _mm512_add_epi8(popcnt_result[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
     }
     // TODO: Ugly
-    for (size_t i = 0; i < 8; i++) {
-        _mm256_storeu_si256((__m256i *)(popcnt_tmp + (i * 32)), popcnt_result[i]);
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512(popcnt_tmp + (i * 64), popcnt_result[i]);
     }
     for (size_t i = 0; i < 256; i++){
         distances_tmp[i] = popcnt_tmp[i];
