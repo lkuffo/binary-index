@@ -361,11 +361,11 @@ def main(
 
     kernels_cpp_256d = [
         # C++:
-        # (
-        #     'HAMMING_U64X4_C',
-        #     cppyy.gbl.hamming_u64x4_c,
-        #     cppyy.gbl.HammingKernel.HAMMING_U64X4_C
-        # ),
+        (
+            'HAMMING_U64X4_C',
+            cppyy.gbl.hamming_u64x4_c,
+            cppyy.gbl.HammingKernel.HAMMING_U64X4_C
+        ),
         (
             "HAMMING_B256_VPSHUFB_SAD",
             cppyy.gbl.hamming_b256_vpshufb_sad,
