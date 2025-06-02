@@ -185,7 +185,7 @@ float hamming_u64x4_c(uint8_t const *a, uint8_t const *b) {
     uint64_t const *b64 = (uint64_t const *)b;
 #pragma unroll
     for (size_t i = 0; i != 4; ++i)
-        popcnt += __builtin_popcountll(a64[i] ^ b64[i]),
+        popcnt += __builtin_popcountll(a64[i] ^ b64[i]);
     return popcnt;
 }
 
@@ -583,7 +583,7 @@ float hamming_u8x128_c(uint8_t const *a, uint8_t const *b) {
 #pragma unroll
     for (size_t i = 0; i != 128; ++i)
         popcnt += __builtin_popcount(a[i] & b[i]);
-    return popcnt; // ! Avoid division by zero
+    return popcnt;
 }
 
 float hamming_u64x16_c(uint8_t const *a, uint8_t const *b) {
@@ -593,7 +593,7 @@ float hamming_u64x16_c(uint8_t const *a, uint8_t const *b) {
 #pragma unroll
     for (size_t i = 0; i != 16; ++i)
         popcnt += __builtin_popcountll(a64[i] ^ b64[i]);
-    return popcnt; // ! Avoid division by zero
+    return popcnt;
 }
 
 // Define the AVX-512 variant using the `vpopcntq` instruction.
