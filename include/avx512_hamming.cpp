@@ -64,7 +64,7 @@ static uint32_t distances_tmp[256];
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-void hamming_128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i popcnt_result[8];
     // Load initial values
     for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
@@ -172,14 +172,14 @@ float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
     __m128i lookup = _mm_set_epi8(
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
-    __m128i xor_low = _mm_and_si256(xor_, low_mask);
-    __m128i xor_high = _mm_and_si256(_mm_srli_epi16(xor_, 4), low_mask);
+    __m128i xor_low = _mm_and_si128(xor_, low_mask);
+    __m128i xor_high = _mm_and_si128(_mm_srli_epi16(xor_, 4), low_mask);
 
     __m128i popcnt_ = _mm_add_epi8(
         _mm_shuffle_epi8(lookup, xor_low),
         _mm_shuffle_epi8(lookup, xor_high));
 
-    __m128i popcnt = _mm_sad_epu8(popcnt_, _mm_setzero_si256());
+    __m128i popcnt = _mm_sad_epu8(popcnt_, _mm_setzero_si128());
     return _mm128_reduce_add_epi64(popcnt);
 }
 
