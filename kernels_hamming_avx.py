@@ -97,6 +97,12 @@ struct VectorComparator {
 };
 
 enum HammingKernel {
+    // 128
+    HAMMING_U64X2_C,
+    HAMMING_B128_VPOPCNTQ,
+    HAMMING_B128_VPSHUFB_SAD,
+    HAMMING_B128_VPOPCNTQ_PDX,
+    HAMMING_B128_VPSHUFB_PDX,
     // 256
     HAMMING_U64X4_C,
     HAMMING_B256_VPOPCNTQ,
@@ -105,6 +111,7 @@ enum HammingKernel {
     HAMMING_B256_VPSHUFB_PDX,
     HAMMING_B256_XORLUT_PDX,
     // 512
+    HAMMING_U64X8_C,
     HAMMING_B512_VPSHUFB_SAD,
     HAMMING_B512_VPOPCNTQ, 
     HAMMING_B512_VPOPCNTQ_PDX, 
@@ -121,6 +128,16 @@ enum HammingKernel {
 };
 
 //
+// 128 region
+//
+float hamming_u64x2_c(uint8_t const *a, uint8_t const *b);
+float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void hamming_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void hamming_b128_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+
+//
 // 256 region
 //
 float hamming_u64x4_c(uint8_t const *a, uint8_t const *b);
@@ -133,6 +150,7 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
 //
 // 512 region
 //
+float hamming_u64x8_c(uint8_t const *a, uint8_t const *b);
 float hamming_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
 void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
@@ -359,6 +377,26 @@ def main(
     query_count: int = -1
 ):
 
+
+    kernels_cpp_128d = [
+        # C++:
+        (
+            'HAMMING_U64X2_C',
+            cppyy.gbl.hamming_u64x2_c,
+            cppyy.gbl.HammingKernel.HAMMING_U64X2_C
+        ),
+        (
+            "HAMMING_B128_VPSHUFB_SAD",
+            cppyy.gbl.hamming_b128_vpshufb_sad,
+            cppyy.gbl.HammingKernel.HAMMING_B128_VPSHUFB_SAD
+        ),
+        (
+            "HAMMING_B128_VPOPCNTQ",
+            cppyy.gbl.hamming_b128_vpopcntq,
+            cppyy.gbl.HammingKernel.HAMMING_B128_VPOPCNTQ
+        ),
+    ]
+
     kernels_cpp_256d = [
         # C++:
         (
@@ -444,6 +482,18 @@ def main(
         #     cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ_3CSA
         # ),
     ]
+    standalone_kernels_cpp_pdx_128d = [
+        (
+            "HAMMING_B128_VPOPCNTQ_PDX",
+            cppyy.gbl.hamming_b128_vpopcntq_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B128_VPOPCNTQ_PDX
+        ),
+        (
+            "HAMMING_B128_VPSHUFB_PDX",
+            cppyy.gbl.hamming_b128_vpshufb_pdx,
+            cppyy.gbl.HammingKernel.HAMMING_B128_VPSHUFB_PDX
+        ),
+    ]
     standalone_kernels_cpp_pdx_256d = [
         (
             "HAMMING_B256_VPOPCNTQ_PDX",
@@ -488,12 +538,14 @@ def main(
 
     # Group kernels by dimension:
     kernels_cpp_per_dimension = {
+        128: kernels_cpp_128d,
         256: kernels_cpp_256d,
         512: kernels_cpp_512d,
         1024: kernels_cpp_1024d,
         1536: kernels_cpp_1536d,
     }
     kernels_cpp_pdx = {
+        128: standalone_kernels_cpp_pdx_128d,
         256: standalone_kernels_cpp_pdx_256d,
         512: standalone_kernels_cpp_pdx_512d,
         1024: standalone_kernels_cpp_pdx_1024d,

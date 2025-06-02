@@ -22,6 +22,12 @@ struct VectorComparator {
 };
 
 enum HammingKernel {
+    // 128
+    HAMMING_U64X2_C,
+    HAMMING_B128_VPOPCNTQ,
+    HAMMING_B128_VPSHUFB_SAD,
+    HAMMING_B128_VPOPCNTQ_PDX,
+    HAMMING_B128_VPSHUFB_PDX,
     // 256
     HAMMING_U64X4_C,
     HAMMING_B256_VPOPCNTQ,
@@ -30,6 +36,7 @@ enum HammingKernel {
     HAMMING_B256_VPSHUFB_PDX,
     HAMMING_B256_XORLUT_PDX,
     // 512
+    HAMMING_U64X8_C,
     HAMMING_B512_VPSHUFB_SAD,
     HAMMING_B512_VPOPCNTQ,
     HAMMING_B512_VPOPCNTQ_PDX,
@@ -48,12 +55,152 @@ enum HammingKernel {
 
 ///////////////////////////////
 ///////////////////////////////
-// region: 256d kernels ///////
+// region: 128d kernels ///////
 ///////////////////////////////
 ///////////////////////////////
 
 static uint8_t popcnt_tmp[256];
 static uint32_t distances_tmp[256];
+
+// 1-to-256 vectors
+// second_vector is a 256*256 matrix in a column-major layout
+void hamming_128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m256i popcnt_result[8];
+    // Load initial values
+    for (size_t i = 0; i < 8; ++i) { // 256 vectors at a time (using 8 registers)
+        popcnt_result[i] = _mm256_set1_epi8(0);
+    }
+    for (size_t dim = 0; dim != 16; dim++){
+        __m256i first = _mm256_set1_epi8(first_vector[dim]);
+        for (size_t i = 0; i < 8; i++){
+            __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
+            __m256i popcnt_ = _mm256_popcnt_epi8(_mm256_xor_epi64(first, second));
+            popcnt_result[i] = _mm256_add_epi8(popcnt_result[i], popcnt_);
+            second_vector += 32; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 8; i++) {
+        _mm256_storeu_si256((__m256i *)(popcnt_tmp + (i * 32)), popcnt_result[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = popcnt_tmp[i];
+    }
+}
+
+// 1-to-256 vectors
+// second_vector is a 256*256 matrix in a column-major layout
+void hamming_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m512i low_mask = _mm512_set1_epi8(0x0f);
+    __m512i popcnt_result[4];
+    __m512i lookup = _mm512_set_epi8(
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+    // Load initial values
+    for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
+        popcnt_result[i] = _mm512_setzero_si512();
+    }
+    for (size_t dim = 0; dim != 16; dim++){
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+
+        for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
+            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i xor_ = _mm512_xor_epi64(first, second);
+
+            // Getting nibbles from data
+            __m512i second_low = _mm512_and_si512(xor_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(xor_, 4), low_mask);
+
+            __m512i popcnt_ = _mm512_add_epi8(
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_low)
+            );
+
+            popcnt_result[i] = _mm512_add_epi8(popcnt_result[i], popcnt_);
+            second_vector += 64; // 256x8-bit values (using 8 registers at a time)
+        }
+    }
+    // TODO: Ugly
+    for (size_t i = 0; i < 4; i++) {
+        _mm512_storeu_si512(popcnt_tmp + (i * 64), popcnt_result[i]);
+    }
+    for (size_t i = 0; i < 256; i++){
+        distances_tmp[i] = popcnt_tmp[i];
+    }
+}
+
+float hamming_u64x2_c(uint8_t const *a, uint8_t const *b) {
+    uint32_t popcnt = 0;
+    uint64_t const *a64 = (uint64_t const *)a;
+    uint64_t const *b64 = (uint64_t const *)b;
+#pragma unroll
+    for (size_t i = 0; i != 2; ++i)
+        popcnt += __builtin_popcountll(a64[i] ^ b64[i]);
+    return popcnt;
+}
+
+inline uint64_t _mm256_reduce_add_epi64(__m256i vec) {
+    __m128i lo128 = _mm256_castsi256_si128(vec);
+    __m128i hi128 = _mm256_extracti128_si256(vec, 1);
+    __m128i sum128 = _mm_add_epi64(lo128, hi128);
+    __m128i hi64 = _mm_unpackhi_epi64(sum128, sum128);
+    __m128i total = _mm_add_epi64(sum128, hi64);
+    return uint64_t(_mm_cvtsi128_si64(total));
+}
+
+inline uint64_t _mm128_reduce_add_epi64(__m128i vec) {
+    __m128i hi64 = _mm_unpackhi_epi64(vec, vec);
+    __m128i sum = _mm_add_epi64(vec, hi64);
+    return static_cast<uint64_t>(_mm_cvtsi128_si64(sum));
+}
+
+/*
+ * Define the AVX2 variant using the `vpshufb` and `vpsadbw` instruction.
+ * It resorts to cheaper byte-shuffling instructions, than population counts.
+ * Source: https://github.com/CountOnes/hamming_weight/blob/1dd7554c0fc39e01c9d7fa54372fd4eccf458875/src/sse_jaccard_index.c#L17
+ */
+__attribute__((target("avx2,bmi2,avx")))
+float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
+    __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
+
+    __m128i xor_ = _mm_xor_epi64(first, second);
+
+    __m128i low_mask = _mm_set1_epi8(0x0f);
+    __m128i lookup = _mm_set_epi8(
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+
+    __m128i xor_low = _mm_and_si256(xor_, low_mask);
+    __m128i xor_high = _mm_and_si256(_mm_srli_epi16(xor_, 4), low_mask);
+
+    __m128i popcnt_ = _mm_add_epi8(
+        _mm_shuffle_epi8(lookup, xor_low),
+        _mm_shuffle_epi8(lookup, xor_high));
+
+    __m128i popcnt = _mm_sad_epu8(popcnt_, _mm_setzero_si256());
+    return _mm128_reduce_add_epi64(popcnt);
+}
+
+
+// Define the AVX-512 variant using the `vpopcntq` instruction.
+// It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
+__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
+float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+    __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
+    __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
+
+    __m128i popcnt = _mm_popcnt_epi64(_mm_xor_epi64(first, second));
+    return _mm128_reduce_add_epi64(popcnt);
+}
+
+
+///////////////////////////////
+///////////////////////////////
+// region: 256d kernels ///////
+///////////////////////////////
+///////////////////////////////
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
@@ -189,15 +336,6 @@ float hamming_u64x4_c(uint8_t const *a, uint8_t const *b) {
     return popcnt;
 }
 
-inline uint64_t _mm256_reduce_add_epi64(__m256i vec) {
-    __m128i lo128 = _mm256_castsi256_si128(vec);
-    __m128i hi128 = _mm256_extracti128_si256(vec, 1);
-    __m128i sum128 = _mm_add_epi64(lo128, hi128);
-    __m128i hi64 = _mm_unpackhi_epi64(sum128, sum128);
-    __m128i total = _mm_add_epi64(sum128, hi64);
-    return uint64_t(_mm_cvtsi128_si64(total));
-}
-
 /*
  * Define the AVX2 variant using the `vpshufb` and `vpsadbw` instruction.
  * It resorts to cheaper byte-shuffling instructions, than population counts.
@@ -245,6 +383,16 @@ float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 // region: 512d kernels ///////
 ///////////////////////////////
 ///////////////////////////////
+
+float hamming_u64x8_c(uint8_t const *a, uint8_t const *b) {
+    uint32_t popcnt = 0;
+    uint64_t const *a64 = (uint64_t const *)a;
+    uint64_t const *b64 = (uint64_t const *)b;
+#pragma unroll
+    for (size_t i = 0; i != 8; ++i)
+        popcnt += __builtin_popcountll(a64[i] ^ b64[i]);
+    return popcnt;
+}
 
 static uint8_t popcnt_tmp_512_a[256];
 static uint8_t popcnt_tmp_512_b[256];
@@ -647,8 +795,6 @@ float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *seco
     return _mm512_reduce_add_epi64(popcnt);
 }
 
-
-
 // Harley-Seal transformation and Odd-Major-style Carry-Save-Adders can be used to replace
 // several population counts with a few bitwise operations and one `popcount`, which can help
 // lift the pressure on the CPU ports.
@@ -750,12 +896,23 @@ std::vector<KNNCandidate> hamming_standalone_partial_sort(
         for (size_t j = 0; j < num_vectors; ++j) {
 
             float current_distance;
-            if constexpr (kernel == HAMMING_U64X4_C){ // 256
+            if constexpr (kernel == HAMMING_U64X2_C){ // 128
+                current_distance = hamming_u64x2_c(query, data);
+            } else if constexpr (kernel == HAMMING_B128_VPSHUFB_SAD) {
+                current_distance = hamming_b128_vpshufb_sad(query, data);
+            } else if constexpr (kernel == HAMMING_B128_VPOPCNTQ) {
+                current_distance = hamming_b128_vpopcntq(query, data);
+
+
+            } else if constexpr (kernel == HAMMING_U64X4_C){ // 256
                 current_distance = hamming_u64x4_c(query, data);
             } else if constexpr (kernel == HAMMING_B256_VPSHUFB_SAD) {
                 current_distance = hamming_b256_vpshufb_sad(query, data);
             } else if constexpr (kernel == HAMMING_B256_VPOPCNTQ) {
                 current_distance = hamming_b256_vpopcntq(query, data);
+
+            } else if constexpr (kernel == HAMMING_U64X8_C){ // 256
+                current_distance = hamming_u64x8_c(query, data);
             } else if constexpr (kernel == HAMMING_B512_VPSHUFB_SAD) { // 512
                 current_distance = hamming_b512_vpshufb_sad(query, data);
             } else if constexpr (kernel == HAMMING_B512_VPOPCNTQ) {
@@ -847,6 +1004,10 @@ std::vector<KNNCandidate> hamming_pdx_standalone_partial_sort(
                 hamming_b512_vpshufb_pdx(query, data);
             } else if constexpr (kernel == HAMMING_B1024_VPSHUFB_PDX){
                 hamming_b1024_vpshufb_pdx(query, data);
+            } else if constexpr (kernel == HAMMING_B128_VPSHUFB_PDX){
+                hamming_b128_vpshufb_pdx(query, data);
+            } else if constexpr (kernel == HAMMING_B128_VPOPCNTQ_PDX){
+                hamming_b128_vpopcntq_pdx(query, data);
             }
 
             // TODO: Ugly
@@ -883,6 +1044,18 @@ std::vector<KNNCandidate> hamming_standalone(
     size_t knn
 ) {
     switch (kernel) {
+        case HAMMING_U64X2_C: // 128
+            return hamming_standalone_partial_sort<HAMMING_U64X2_C, 16>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case HAMMING_B128_VPSHUFB_SAD:
+            return hamming_standalone_partial_sort<HAMMING_B128_VPSHUFB_SAD, 16>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case HAMMING_B128_VPOPCNTQ:
+            return hamming_standalone_partial_sort<HAMMING_B128_VPOPCNTQ, 16>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case HAMMING_B128_VPOPCNTQ_PDX:
+            return hamming_pdx_standalone_partial_sort<HAMMING_B128_VPOPCNTQ_PDX, 16, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case HAMMING_B128_VPSHUFB_PDX:
+            return hamming_pdx_standalone_partial_sort<HAMMING_B128_VPSHUFB_PDX, 16, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
+
+
         case HAMMING_U64X4_C: // 256
             return hamming_standalone_partial_sort<HAMMING_U64X4_C, 32>(first_vector, second_vector, num_queries, num_vectors, knn);
         case HAMMING_B256_VPSHUFB_SAD:
@@ -897,7 +1070,9 @@ std::vector<KNNCandidate> hamming_standalone(
             return hamming_pdx_standalone_partial_sort<HAMMING_B256_XORLUT_PDX, 32, 256>(first_vector, second_vector, num_queries, num_vectors, knn);
 
 
-        case HAMMING_B512_VPSHUFB_SAD: // 512
+        case HAMMING_U64X8_C: // 512
+            return hamming_standalone_partial_sort<HAMMING_U64X8_C, 64>(first_vector, second_vector, num_queries, num_vectors, knn);
+        case HAMMING_B512_VPSHUFB_SAD:
             return hamming_standalone_partial_sort<HAMMING_B512_VPSHUFB_SAD, 64>(first_vector, second_vector, num_queries, num_vectors, knn);
         case HAMMING_B512_VPOPCNTQ:
             return hamming_standalone_partial_sort<HAMMING_B512_VPOPCNTQ, 64>(first_vector, second_vector, num_queries, num_vectors, knn);
