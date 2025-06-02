@@ -845,9 +845,9 @@ std::vector<KNNCandidate> hamming_pdx_standalone_partial_sort(
     std::vector<KNNCandidate> all_distances(num_vectors);
     const uint8_t* query = second_vector;
     for (size_t i = 0; i < num_queries; ++i) {
-//        if constexpr (kernel == HAMMING_B256_XORLUT_PDX){
-//            fill_b256_xorluts(query);
-//        }
+        if constexpr (kernel == HAMMING_B256_XORLUT_PDX){
+            fill_b256_xorluts(query);
+        }
         const uint8_t* data = first_vector;
         // Fill all_distances by direct indexing
         size_t global_offset = 0;
