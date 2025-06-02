@@ -1021,5 +1021,6 @@ if __name__ == "__main__":
         ndims=args.ndims,
         approximate=args.approximate,
         threads=args.threads,
-        query_count=args.query_count
+        query_count=args.query_count,
+        output=args.output,
     )
