@@ -951,7 +951,8 @@ def main(
             benchmark_metadata['kernel_name'] = name
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
             stats = bench_standalone(vectors=vectors, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
-            if len(output): save_results(stats, benchmark_metadata, output)
+            if len(output):
+                save_results(stats, benchmark_metadata, output)
             else:
                 print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                 print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
@@ -963,7 +964,8 @@ def main(
                 benchmark_metadata['kernel_name'] = name
                 print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
                 stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
-                if len(output): save_results(stats, benchmark_metadata, output)
+                if len(output):
+                    save_results(stats, benchmark_metadata, output)
                 else:
                     print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                     print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")

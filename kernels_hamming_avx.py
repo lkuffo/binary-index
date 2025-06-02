@@ -647,7 +647,8 @@ def main(
             query_count=query_count,
             warmup_repetition=warmup_repetition
         )
-        if len(output): save_results(stats, benchmark_metadata, output)
+        if len(output):
+            save_results(stats, benchmark_metadata, output)
         else:
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
@@ -661,7 +662,8 @@ def main(
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
-            if len(output): save_results(stats, benchmark_metadata, output)
+            if len(output):
+                save_results(stats, benchmark_metadata, output)
             else:
                 print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                 print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
@@ -676,7 +678,8 @@ def main(
                 print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                 print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
                 print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
-                if len(output): save_results(stats, benchmark_metadata, output)
+                if len(output):
+                    save_results(stats, benchmark_metadata, output)
                 else:
                     print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                     print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
