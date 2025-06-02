@@ -25,6 +25,7 @@ import time
 import os
 os.environ["EXTRA_CLING_ARGS"] = "-O3 -march=native"
 
+import csv
 import cppyy
 import cppyy.ll
 import numpy as np
@@ -180,6 +181,29 @@ std::vector<KNNCandidate> hamming_standalone(
 );
 
 """)
+
+def save_results(
+    stats,
+    metadata,
+    results_path,
+):
+    write_header = True
+    if os.path.exists(results_path):
+        write_header = False
+    f = open(results_path, 'a')
+    writer = csv.writer(f)
+    if write_header:
+        writer.writerow([
+            "kernel", "bop/s", "elapsed_ms",
+            "ndim", "n_vectors", "n_queries", "knn"
+        ])
+    bops = float(stats['bit_ops_per_s']) / 1e9
+    elapsed = float(stats['elapsed_s']) * 1000
+    writer.writerow([
+        metadata.get("kernel_name", ""), bops, elapsed,
+        metadata.get("ndim", 0), metadata.get("n_vectors", 0), metadata.get("query_count", 0), metadata.get("knn", 0)
+    ])
+    f.close()
 
 
 def generate_random_vectors(count: int, bits_per_vector: int) -> np.ndarray:
@@ -389,11 +413,18 @@ def main(
     ndims: List[int] = [128, 256, 1024, 1536],
     approximate: bool = True,
     threads: int = 1,
-    query_count: int = -1
+    query_count: int = -1,
+    output: str = ""
 ):
     if query_count > count:
         print('Exiting [query_count > count]')
         return
+
+    benchmark_metadata = {
+        "query_count": query_count,
+        "n_vectors": count,
+        "knn": k
+    }
 
     kernels_cpp_128d = [
         # C++:
@@ -603,13 +634,15 @@ def main(
         #
         # print("- passed!")
 
+        warmup_repetition = get_warmup_repetition_n(len(vectors))
         # Provide FAISS benchmarking baselines:
         print(f"Profiling FAISS over {count:,} vectors and {query_count} queries with Hamming metric")
         stats = bench_faiss(
             vectors=vectors,
             k=k,
             threads=threads,
-            query_count=query_count
+            query_count=query_count,
+            warmup_repetition=warmup_repetition
         )
         print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
         print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
@@ -617,23 +650,25 @@ def main(
 
         # Analyze all the kernels:
         queries = vectors[:query_count].copy()
-        warmup_repetition = get_warmup_repetition_n(len(vectors))
         for name, _, kernel_id in kernels_cpp:
-            # Warmup
+            benchmark_metadata['kernel_name'] = name
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
             stats = bench_standalone(vectors=vectors, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, warmup_repetition=warmup_repetition)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
+            if len(output): save_results(stats, benchmark_metadata, output)
 
         if len(vectors) % 256 == 0:
             vectors_pdx = row_major_to_pdx(vectors, 256)
             for name, _, kernel_id in kernels_cpp_pdx:
+                benchmark_metadata['kernel_name'] = name
                 print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
                 stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, warmup_repetition=warmup_repetition)
                 print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                 print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
                 print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
+                if len(output): save_results(stats, benchmark_metadata, output)
 
 
 if __name__ == "__main__":
@@ -678,6 +713,12 @@ if __name__ == "__main__":
         default=-1,
         help="Number of queries to use for the benchmark",
     )
+    arg_parser.add_argument(
+        "--output",
+        type=str,
+        default="",
+        help="File path to output the benchmark results",
+    )
     args = arg_parser.parse_args()
     main(
         count=args.count,
@@ -685,5 +726,6 @@ if __name__ == "__main__":
         ndims=args.ndims,
         approximate=args.approximate,
         threads=args.threads,
-        query_count=args.query_count
+        query_count=args.query_count,
+        output = args.output,
     )
