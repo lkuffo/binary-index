@@ -190,16 +190,17 @@ def generate_random_vectors(count: int, bits_per_vector: int) -> np.ndarray:
 
 def bench_faiss(
     vectors: np.ndarray,
+    queries: np.ndarray,
     k: int,
     threads: int,
-    query_count: int = 1000
+    query_count: int = 1000,
+    warmup_repetition: int = 5,
 ) -> dict:
-
     faiss_set_threads(threads)
     n = vectors.shape[0]
-    queries = vectors.copy()[:query_count]
+
     # Warmup
-    for i in range(5):
+    for i in range(warmup_repetition):
         _, matches = faiss_knn_hamming(vectors, queries, k, variant='hc')
     start = time.perf_counter()
     _, matches = faiss_knn_hamming(vectors, queries, k, variant='hc')
@@ -268,19 +269,31 @@ def bench_kernel(
         "recalled_top_match": recalled_top_match,
     }
 
+def get_warmup_repetition_n(
+        n_vectors: int
+) -> int:
+    if n_vectors <= 1024:
+        return 1000
+    elif n_vectors <= 16384:
+        return 100
+    elif n_vectors <= 524288:
+        return 10
+    return 3
+
 
 def bench_standalone(
         vectors: np.ndarray,
+        queries: np.ndarray,
         k: int,
         kernel=cppyy.gbl.HammingKernel.HAMMING_B1024_VPOPCNTQ,
         query_count: int = 1000,
         kernel_name: str = "",
+        warmup_repetition: int = 5
 ) -> dict:
-    queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
 
     # Warmup
-    for i in range(5):
+    for i in range(warmup_repetition):
         result = cppyy.gbl.hamming_standalone(
             kernel,
             vectors, queries,
@@ -324,12 +337,14 @@ def row_major_to_pdx(vectors, block_size=256) -> np.ndarray:
 
 def bench_standalone_pdx(
         vectors: np.ndarray,
+        vectors_pdx: np.ndarray,
+        queries: np.ndarray,
         k: int,
         kernel,
         query_count: int = 1000,
-        kernel_name: str = ""
+        kernel_name: str = "",
+        warmup_repetition: int = 5
 ) -> dict:
-    queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
 
     if len(vectors) % 256 != 0:
@@ -339,7 +354,7 @@ def bench_standalone_pdx(
     vectors_pdx = row_major_to_pdx(vectors, 256)
 
     # WARMUP
-    for i in range(5):
+    for i in range(warmup_repetition):
         result = cppyy.gbl.hamming_standalone(
             kernel,
             vectors_pdx, queries,
@@ -376,7 +391,9 @@ def main(
     threads: int = 1,
     query_count: int = -1
 ):
-
+    if query_count > count:
+        print('Exiting [query_count > count]')
+        return
 
     kernels_cpp_128d = [
         # C++:
@@ -599,20 +616,24 @@ def main(
         print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         # Analyze all the kernels:
+        queries = vectors.copy()[:query_count]
+        warmup_repetition = get_warmup_repetition_n(len(vectors))
         for name, _, kernel_id in kernels_cpp:
             # Warmup
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
-            stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
+            stats = bench_standalone(vectors=vectors, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, warmup_repetition=warmup_repetition)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
-        for name, _, kernel_id in kernels_cpp_pdx:
-            print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
-            stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
-            print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-            print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
-            print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
+        if len(vectors) % 256 == 0:
+            vectors_pdx = row_major_to_pdx(vectors, 256)
+            for name, _, kernel_id in kernels_cpp_pdx:
+                print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
+                stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, warmup_repetition=warmup_repetition)
+                print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+                print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
+                print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
 
 if __name__ == "__main__":

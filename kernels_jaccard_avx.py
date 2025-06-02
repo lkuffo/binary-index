@@ -311,14 +311,18 @@ def generate_random_vectors(count: int, bits_per_vector: int) -> np.ndarray:
 
 def bench_faiss(
     vectors: np.ndarray,
+    queries: np.ndarray,
     k: int,
     threads: int,
-    query_count: int = 1000
+    query_count: int = 1000,
+    warmup_repetitions: int = 5,
 ) -> dict:
-
     faiss_set_threads(threads)
     n = vectors.shape[0]
-    queries = vectors.copy()[:query_count]
+
+    # Warmup
+    for i in range(warmup_repetitions):
+        _, matches = faiss_knn(vectors, queries, k, metric=FAISS_METRIC_JACCARD)
     start = time.perf_counter()
     _, matches = faiss_knn(vectors, queries, k, metric=FAISS_METRIC_JACCARD)
     elapsed = time.perf_counter() - start
