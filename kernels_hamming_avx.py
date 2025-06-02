@@ -234,7 +234,7 @@ def bench_kernel(
         kind=MetricKind.Tanimoto,
         signature=MetricSignature.ArrayArray,
     )
-    queries = vectors.copy()[:query_count]
+    queries = vectors[:query_count].copy()
 
     bits_per_vector = vectors.shape[1] * 8
     start = time.perf_counter()
@@ -616,7 +616,7 @@ def main(
         print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         # Analyze all the kernels:
-        queries = vectors.copy()[:query_count]
+        queries = vectors[:query_count].copy()
         warmup_repetition = get_warmup_repetition_n(len(vectors))
         for name, _, kernel_id in kernels_cpp:
             # Warmup
