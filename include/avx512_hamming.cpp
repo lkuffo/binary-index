@@ -822,13 +822,13 @@ void fill_b256_xorluts(const uint8_t *query){
         uint8_t first_high = (query[d] & 0xF0) >> 4;
         uint8_t first_low = query[d] & 0x0F;
 
-        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
-        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
-        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((d * 2) * 64), lut_xor_high);
-        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((d * 2) + 1) * 64), lut_xor_low);
+//        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
+//        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
+//        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((d * 2) * 64), lut_xor_high);
+//        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((d * 2) + 1) * 64), lut_xor_low);
 
-//        memcpy(query_aware_b256_xorluts_high + (d * 16), xor_lookup_tables[first_high], 16);
-//        memcpy(query_aware_b256_xorluts_low + (d * 16), xor_lookup_tables[first_low], 16);
+        memcpy(query_aware_b256_xorluts_high + (d * 16), xor_lookup_tables[first_high], 16);
+        memcpy(query_aware_b256_xorluts_low + (d * 16), xor_lookup_tables[first_low], 16);
 
     }
 };
