@@ -162,8 +162,8 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
             __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(second, 4), low_mask);
 
             __m512i popcnt_ = _mm512_add_epi8(
-                _mm512_shuffle_epi8(lut_xor_low, second_low),
-                _mm512_shuffle_epi8(lut_xor_high, second_high)
+                _mm512_shuffle_epi8(lut_xor_high, second_high),
+                _mm512_shuffle_epi8(lut_xor_low, second_low)
             );
 
             popcnt_result[i] = _mm512_add_epi8(popcnt_result[i], popcnt_);
