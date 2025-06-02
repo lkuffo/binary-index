@@ -404,8 +404,8 @@ float jaccard_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
     __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
     __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
 
-    __m256i intersection = _mm_popcnt_epi64(_mm_and_epi64(first, second));
-    __m256i union_ = _mm_popcnt_epi64(_mm_or_epi64(first, second));
+    __m128i intersection = _mm_popcnt_epi64(_mm_and_epi64(first, second));
+    __m128i union_ = _mm_popcnt_epi64(_mm_or_epi64(first, second));
     return 1.f - (_mm128_reduce_add_epi64(intersection) + 1.f) / (_mm128_reduce_add_epi64(union_) + 1.f);
 }
 
