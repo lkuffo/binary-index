@@ -166,6 +166,7 @@ enum JaccardKernel {
     JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX,
     JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX,
     // 512
+    JACCARD_U64X8_C,
     JACCARD_B512_VPSHUFB_SAD,
     JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B512_VPOPCNTQ, 
@@ -316,7 +317,6 @@ def bench_faiss(
         "recalled_top_match": recalled_top_match,
     }
 
-
 def bench_kernel(
     kernel_pointer: int,
     vectors: np.ndarray,
@@ -370,17 +370,17 @@ def bench_kernel(
 
 def bench_standalone(
         vectors: np.ndarray,
+        queries: np.ndarray,
         k: int,
         kernel=cppyy.gbl.JaccardKernel.JACCARD_B1024_VPOPCNTQ,
         query_count: int = 1000,
         kernel_name: str = "",
+        data_popcounts: np.ndarray = None,
 ) -> dict:
-    queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
 
     start = time.perf_counter()
     if "PRECOMPUTED" in kernel_name:
-        data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         assert len(data_popcounts) == len(vectors)
         # Warmup
         for i in range(5):
@@ -439,23 +439,18 @@ def row_major_to_pdx(vectors, block_size=256) -> np.ndarray:
 
 def bench_standalone_pdx(
         vectors: np.ndarray,
+        vectors_pdx: np.ndarray,
+        queries: np.ndarray,
         k: int,
         kernel,
         query_count: int = 1000,
-        kernel_name: str = ""
+        kernel_name: str = "",
+        data_popcounts: np.ndarray = None,
 ) -> dict:
-    queries = vectors.copy()[:query_count]
     bits_per_vector = vectors.shape[1] * 8
-
-    if len(vectors) % 256 != 0:
-        raise Exception('Number of vectors must be divisible by 256')
-
-    # TODO: Unfair if this is never in cache, in contrast to the other approaches
-    vectors_pdx = row_major_to_pdx(vectors, 256)
 
     start = time.perf_counter()
     if "PRECOMPUTED" in kernel_name:
-        data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         assert len(data_popcounts) == len(vectors)
         # Warmup
         for i in range(5):
@@ -575,26 +570,26 @@ def main(
 
     kernels_cpp_1024d = [
         # C++:
-        # (
-        #     "JACCARD_U64X16_C",
-        #     cppyy.gbl.jaccard_u64x16_c,
-        #     cppyy.gbl.JaccardKernel.JACCARD_U64X16_C
-        # ),
-        # (
-        #     "JACCARD_U8X128_C",
-        #     cppyy.gbl.jaccard_u8x128_c,
-        #     cppyy.gbl.JaccardKernel.JACCARD_U8X128_C
-        # ),
-        # (
-        #     "JACCARD_U64X16_CSA3_C",
-        #     cppyy.gbl.jaccard_u64x16_csa3_c,
-        #     cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA3_C
-        # ),
-        # (
-        #     "JACCARD_U64X16_CSA15_CPP",
-        #     cppyy.gbl.jaccard_u64x16_csa15_cpp,
-        #     cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA15_CPP
-        # ),
+        (
+            "JACCARD_U64X16_C",
+            cppyy.gbl.jaccard_u64x16_c,
+            cppyy.gbl.JaccardKernel.JACCARD_U64X16_C
+        ),
+        (
+            "JACCARD_U8X128_C",
+            cppyy.gbl.jaccard_u8x128_c,
+            cppyy.gbl.JaccardKernel.JACCARD_U8X128_C
+        ),
+        (
+            "JACCARD_U64X16_CSA3_C",
+            cppyy.gbl.jaccard_u64x16_csa3_c,
+            cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA3_C
+        ),
+        (
+            "JACCARD_U64X16_CSA15_CPP",
+            cppyy.gbl.jaccard_u64x16_csa15_cpp,
+            cppyy.gbl.JaccardKernel.JACCARD_U64X16_CSA15_CPP
+        ),
         # SIMD:
         (
             "JACCARD_B1024_VPOPCNTQ",
@@ -800,20 +795,24 @@ def main(
         # print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         # Analyze all the kernels:
+        data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
+        queries = vectors.copy()[:query_count]
         for name, _, kernel_id in kernels_cpp:
             # Warmup
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
-            stats = bench_standalone(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
+            stats = bench_standalone(vectors=vectors, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
-        for name, _, kernel_id in kernels_cpp_pdx:
-            print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
-            stats = bench_standalone_pdx(vectors=vectors, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name)
-            print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-            print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
-            print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
+        if len(vectors) % 256 == 0:
+            vectors_pdx = row_major_to_pdx(vectors, 256)
+            for name, _, kernel_id in kernels_cpp_pdx:
+                print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
+                stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts)
+                print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+                print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
+                print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
 
 if __name__ == "__main__":
