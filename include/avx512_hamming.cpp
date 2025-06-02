@@ -6,6 +6,7 @@
 #include <vector>
 #include <immintrin.h>
 
+#include "jaccard_nibble_luts.h"
 #include "jaccard_nibble_luts_avx2.h"
 #include "jaccard_nibble_luts_avx512.h"
 
@@ -127,6 +128,9 @@ void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 // Each nibble is a LUT of 64 bytes (to fit on the AVX512 register)
 // 64 x 64 = 4096 bytes needed
 static uint8_t* query_aware_b256_xorluts_avx512[4096];
+// Or just enough: Each nibble is a LUT of 16 bytes: 32 x 16 x 2 (high/low):
+static uint8_t* query_aware_b256_xorluts_high[1024];
+static uint8_t* query_aware_b256_xorluts_low[1024];
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
@@ -144,8 +148,11 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
 //        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
 //        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
 
-        __m512i lut_xor_high = _mm512_loadu_epi8(query_aware_b256_xorluts_avx512 + dim);
-        __m512i lut_xor_low = _mm512_loadu_epi8(query_aware_b256_xorluts_avx512 + dim);
+//        __m512i lut_xor_high = _mm512_loadu_epi8(query_aware_b256_xorluts_avx512 + dim);
+//        __m512i lut_xor_low = _mm512_loadu_epi8(query_aware_b256_xorluts_avx512 + dim);
+
+        __m512i lut_xor_high = _mm512_broadcast_i32x4(_mm_load_si128(reinterpret_cast<const __m128i*>(query_aware_b256_xorluts_high + (dim * 16))));
+        __m512i lut_xor_low = _mm512_broadcast_i32x4(_mm_load_si128(reinterpret_cast<const __m128i*>(query_aware_b256_xorluts_low + (dim * 16))));
 
         for (size_t i = 0; i < 4; i++){ // 256 uint8_t values
             __m512i second = _mm512_loadu_epi8(second_vector);
@@ -815,11 +822,14 @@ void fill_b256_xorluts(const uint8_t *query){
         uint8_t first_high = (query[d] & 0xF0) >> 4;
         uint8_t first_low = query[d] & 0x0F;
 
-        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
-        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
+//        __m512i lut_xor_high = m512_xor_lookup_tables[first_high];
+//        __m512i lut_xor_low = m512_xor_lookup_tables[first_low];
+//        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((d * 2) * 64), lut_xor_high);
+//        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((d * 2) + 1) * 64), lut_xor_low);
 
-        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((d * 2) * 64), lut_xor_high);
-        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((d * 2) + 1) * 64), lut_xor_low);
+        std::memcpy(query_aware_b256_xorluts_high + (d * 16), xor_lookup_tables[first_high], 16);
+        std::memcpy(query_aware_b256_xorluts_low + (d * 16), xor_lookup_tables[first_low], 16);
+
     }
 };
 
