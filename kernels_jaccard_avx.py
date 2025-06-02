@@ -244,6 +244,7 @@ void jaccard_b256_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t c
 //
 // 512 region
 //
+float jaccard_u64x8_c(uint8_t const *a, uint8_t const *b);
 float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 float jaccard_b512_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
@@ -391,7 +392,7 @@ def get_warmup_repetition_n(
         return 1000
     elif n_vectors <= 16384:
         return 100
-    elif n_vectors <= 1048576:
+    elif n_vectors <= 524288:
         return 10
     return 3
 
@@ -619,6 +620,11 @@ def main(
     ]
 
     kernels_cpp_512d = [
+        (
+            'JACCARD_U64X8_C',
+            cppyy.gbl.jaccard_u64x8_c,
+            cppyy.gbl.JaccardKernel.JACCARD_U64X8_C
+        ),
         (
             "JACCARD_B512_VPOPCNTQ",
             cppyy.gbl.jaccard_b512_vpopcntq,
