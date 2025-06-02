@@ -518,22 +518,22 @@ def main(
     ]
     kernels_cpp_1536d = [
         # C++:
-        (
-            "HAMMING_U64X24_C",
-            cppyy.gbl.hamming_u64x24_c,
-            cppyy.gbl.HammingKernel.HAMMING_U64X24_C
-        ),
-        # SIMD:
-        (
-            "HAMMING_B1536_VPOPCNTQ",
-            cppyy.gbl.hamming_b1536_vpopcntq,
-            cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ
-        ),
-        (
-            "HAMMING_B1536_VPOPCNTQ_3CSA",
-            cppyy.gbl.hamming_b1536_vpopcntq_3csa,
-            cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ_3CSA
-        ),
+        # (
+        #     "HAMMING_U64X24_C",
+        #     cppyy.gbl.hamming_u64x24_c,
+        #     cppyy.gbl.HammingKernel.HAMMING_U64X24_C
+        # ),
+        # # SIMD:
+        # (
+        #     "HAMMING_B1536_VPOPCNTQ",
+        #     cppyy.gbl.hamming_b1536_vpopcntq,
+        #     cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ
+        # ),
+        # (
+        #     "HAMMING_B1536_VPOPCNTQ_3CSA",
+        #     cppyy.gbl.hamming_b1536_vpopcntq_3csa,
+        #     cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ_3CSA
+        # ),
     ]
     standalone_kernels_cpp_pdx_128d = [
         (
