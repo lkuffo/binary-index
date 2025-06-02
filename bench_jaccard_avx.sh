@@ -18,7 +18,7 @@ do
     do
         for query_count in "${n_queries[@]}"
         do
-            uv run --script kernels_jaccard_avx.py --count {n_vector} --ndims {d} --k 10 --query_count {query_count}
+            uv run --script kernels_jaccard_avx.py --count ${n_vector} --ndims ${d} --k 10 --query_count ${query_count}
         done
     done
 done
