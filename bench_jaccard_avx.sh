@@ -1,5 +1,7 @@
 #!/bin/bash
 
+outfile = "$1"
+
 echo "Compiling..."
 clang++ -O3 -march=native -DNDEBUG -std=c++20 -shared -o ./include/avx512_jaccard.dylib ./include/avx512_jaccard.cpp
 
@@ -8,9 +10,9 @@ echo "Running Jaccard benchmarks..."
 #n_queries=(1 10 100 1000 10000)
 #dimensions=(128 256 512 1024)
 
-n_vectors=(256 512 1024 2048 4096 8192)
+dimensions=(256 512 1024)
+n_vectors=(256 512 1024)
 n_queries=(1 10 100)
-dimensions=(128 256 512 1024)
 
 for d in "${dimensions[@]}"
 do
@@ -18,7 +20,7 @@ do
     do
         for query_count in "${n_queries[@]}"
         do
-            uv run --script kernels_jaccard_avx.py --count ${n_vector} --ndims ${d} --k 10 --query_count ${query_count}
+            uv run --script kernels_jaccard_avx.py --count ${n_vector} --ndims ${d} --k 10 --query_count ${query_count} --output $outfile
         done
     done
 done
