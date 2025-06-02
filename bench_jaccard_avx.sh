@@ -1,6 +1,6 @@
 #!/bin/bash
 
-outfile = "$1"
+outfile="$1"
 
 echo "Compiling..."
 clang++ -O3 -march=native -DNDEBUG -std=c++20 -shared -o ./include/avx512_jaccard.dylib ./include/avx512_jaccard.cpp
