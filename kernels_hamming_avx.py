@@ -418,6 +418,11 @@ def main(
 
     kernels_cpp_512d = [
         (
+            'HAMMING_U64X8_C',
+            cppyy.gbl.hamming_u64x8_c,
+            cppyy.gbl.HammingKernel.HAMMING_U64X8_C
+        ),
+        (
             "HAMMING_B512_VPOPCNTQ",
             cppyy.gbl.hamming_b512_vpopcntq,
             cppyy.gbl.HammingKernel.HAMMING_B512_VPOPCNTQ
