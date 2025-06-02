@@ -153,6 +153,18 @@ struct VectorComparator {
 };
 
 enum JaccardKernel {
+    // 128
+    JACCARD_U64X2_C,
+    JACCARD_B128_VPSHUFB_SAD,
+    JACCARD_B128_VPSHUFB_SAD_PRECOMPUTED,
+    JACCARD_B128_VPOPCNTQ,
+    JACCARD_B128_VPOPCNTQ_PRECOMPUTED,
+    JACCARD_B128_VPOPCNTQ_VPSHUFB,
+    JACCARD_B128_VPOPCNTQ_PDX,
+    JACCARD_B128_VPOPCNTQ_PRECOMPUTED_PDX,
+    JACCARD_B128_VPSHUFB_PDX,
+    JACCARD_B128_VPSHUFB_PRECOMPUTED_PDX,
+    JACCARD_B128_VPOPCNTQ_VPSHUFB_PDX,
     // 256
     JACCARD_U64X4_C,
     JACCARD_B256_VPSHUFB_SAD,
@@ -199,25 +211,30 @@ enum JaccardKernel {
 };
 
 //
+// 128 region
+//
+float jaccard_u64x2_c(uint8_t const *a, uint8_t const *b);
+float jaccard_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+float jaccard_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+float jaccard_b128_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
+float jaccard_b128_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+float jaccard_b128_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const second_popcount);
+void jaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+void jaccard_b128_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+void jaccard_b128_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+
+
+//
 // 256 region
 //
 float jaccard_u64x4_c(uint8_t const *a, uint8_t const *b);
-__attribute__((target("avx2,bmi2,avx")))
 float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
-__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 float jaccard_b256_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
-__attribute__((target("avx2,bmi2,avx")))
-float jaccard_b256_vpshufb_sad_precomputed(
-    uint8_t const *first_vector, uint8_t const *second_vector,
-    uint32_t const first_popcount, uint32_t const second_popcount
-);
-__attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b256_vpopcntq_precomputed(
-    uint8_t const *first_vector, uint8_t const *second_vector,
-    uint32_t const first_popcount, uint32_t const second_popcount
-);
-
+float jaccard_b256_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+float jaccard_b256_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const second_popcount);
 void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
@@ -367,6 +384,16 @@ def bench_kernel(
         "recalled_top_match": recalled_top_match,
     }
 
+def get_warmup_repetition_n(
+        n_vectors: int
+) -> int:
+    if n_vectors <= 1024:
+        return 1000
+    elif n_vectors <= 16384:
+        return 100
+    elif n_vectors <= 1048576:
+        return 10
+    return 3
 
 def bench_standalone(
         vectors: np.ndarray,
@@ -376,6 +403,7 @@ def bench_standalone(
         query_count: int = 1000,
         kernel_name: str = "",
         data_popcounts: np.ndarray = None,
+        warmup_repetition: int = 5
 ) -> dict:
     bits_per_vector = vectors.shape[1] * 8
 
@@ -383,7 +411,7 @@ def bench_standalone(
     if "PRECOMPUTED" in kernel_name:
         assert len(data_popcounts) == len(vectors)
         # Warmup
-        for i in range(5):
+        for i in range(warmup_repetition):
             result = cppyy.gbl.jaccard_standalone(
                 kernel,
                 vectors, queries,
@@ -395,7 +423,7 @@ def bench_standalone(
             len(queries), len(vectors), k, data_popcounts)
     else:
         # Warmup
-        for i in range(5):
+        for i in range(warmup_repetition):
             result = cppyy.gbl.jaccard_standalone(
                 kernel,
                 vectors, queries,
@@ -446,6 +474,7 @@ def bench_standalone_pdx(
         query_count: int = 1000,
         kernel_name: str = "",
         data_popcounts: np.ndarray = None,
+        warmup_repetition: int = 5
 ) -> dict:
     bits_per_vector = vectors.shape[1] * 8
 
@@ -453,7 +482,7 @@ def bench_standalone_pdx(
     if "PRECOMPUTED" in kernel_name:
         assert len(data_popcounts) == len(vectors)
         # Warmup
-        for i in range(5):
+        for i in range(warmup_repetition):
             result = cppyy.gbl.jaccard_standalone(
                 kernel,
                 vectors_pdx, queries,
@@ -465,7 +494,7 @@ def bench_standalone_pdx(
             len(queries), len(vectors), k, data_popcounts)
     else:
         # Warmup
-        for i in range(5):
+        for i in range(warmup_repetition):
             result = cppyy.gbl.jaccard_standalone(
                 kernel,
                 vectors_pdx, queries,
@@ -502,7 +531,51 @@ def main(
     threads: int = 1,
     query_count: int = -1
 ):
+    if query_count > count:
+        print('Exiting [query_count > count]')
+        return
 
+    kernels_cpp_128d = [
+        # C++:
+        (
+            'JACCARD_U64X2_C',
+            cppyy.gbl.jaccard_u64x2_c,
+            cppyy.gbl.JaccardKernel.JACCARD_U64X2_C
+        ),
+        (
+            "JACCARD_B128_VPSHUFB_SAD",
+            cppyy.gbl.jaccard_b128_vpshufb_sad,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPSHUFB_SAD
+        ),
+        (
+            "JACCARD_B128_VPOPCNTQ",
+            cppyy.gbl.jaccard_b128_vpopcntq,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ
+        ),
+        (
+            "JACCARD_B128_VPOPCNTQ_VPSHUFB",
+            cppyy.gbl.jaccard_b128_vpopcntq_vpshufb,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ_VPSHUFB
+        ),
+        (
+            "JACCARD_B128_VPOPCNTQ_PRECOMPUTED",
+            cppyy.gbl.jaccard_b128_vpopcntq_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ_PRECOMPUTED
+        ),
+        (
+            "JACCARD_B128_VPSHUFB_SAD_PRECOMPUTED",
+            cppyy.gbl.jaccard_b128_vpshufb_sad_precomputed,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPSHUFB_SAD_PRECOMPUTED
+        )
+    ]
+    kernels_numba_128d = [
+        # Baselines:
+        (
+            "jaccard_u64x2_numba",
+            jaccard_u64x2_numba,
+            jaccard_u64x2_numba.address,
+        ),
+    ]
     kernels_cpp_256d = [
         # C++:
         (
@@ -663,6 +736,33 @@ def main(
             jaccard_u64x24_numba.address,
         ),
     ]
+    standalone_kernels_cpp_pdx_128d = [
+        (
+            "JACCARD_B128_VPOPCNTQ_PDX",
+            cppyy.gbl.jaccard_b128_vpopcntq_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ_PDX
+        ),
+        (
+            "JACCARD_B128_VPSHUFB_PDX",
+            cppyy.gbl.jaccard_b128_vpshufb_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPSHUFB_PDX
+        ),
+        (
+            "JACCARD_B128_VPOPCNTQ_VPSHUFB_PDX",
+            cppyy.gbl.jaccard_b128_vpopcntq_vpshufb_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ_VPSHUFB_PDX
+        ),
+        (
+            "JACCARD_B128_VPOPCNTQ_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b128_vpopcntq_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPOPCNTQ_PRECOMPUTED_PDX
+        ),
+        (
+            "JACCARD_B128_VPSHUFB_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b128_vpshufb_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B128_VPSHUFB_PRECOMPUTED_PDX
+        )
+    ]
     standalone_kernels_cpp_pdx_256d = [
         (
             "JACCARD_B256_VPOPCNTQ_PDX",
@@ -737,20 +837,24 @@ def main(
 
     # Group kernels by dimension:
     kernels_cpp_per_dimension = {
+        128: kernels_cpp_128d,
         256: kernels_cpp_256d,
         512: kernels_cpp_512d,
         1024: kernels_cpp_1024d,
         1536: kernels_cpp_1536d,
     }
     kernels_numba_per_dimension = {
+        128: kernels_numba_128d,
         256: kernels_numba_256d,
         1024: kernels_numba_1024d,
         1536: kernels_numba_1536d,
     }
     kernels_cpp_pdx = {
+        128: standalone_kernels_cpp_pdx_128d,
         256: standalone_kernels_cpp_pdx_256d,
         512: standalone_kernels_cpp_pdx_512d,
         1024: standalone_kernels_cpp_pdx_1024d,
+        1536: []
     }
 
     if query_count == -1:
@@ -797,10 +901,11 @@ def main(
         # Analyze all the kernels:
         data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
         queries = vectors.copy()[:query_count]
+        warmup_repetition = get_warmup_repetition_n(len(vectors))
         for name, _, kernel_id in kernels_cpp:
             # Warmup
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
-            stats = bench_standalone(vectors=vectors, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts)
+            stats = bench_standalone(vectors=vectors, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
             print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
@@ -809,7 +914,7 @@ def main(
             vectors_pdx = row_major_to_pdx(vectors, 256)
             for name, _, kernel_id in kernels_cpp_pdx:
                 print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
-                stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts)
+                stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
                 print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
                 print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
                 print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")

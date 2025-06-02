@@ -371,7 +371,7 @@ def bench_standalone_pdx(
 def main(
     count: int,
     k: int = 1,
-    ndims: List[int] = [256, 1024, 1536],
+    ndims: List[int] = [128, 256, 1024, 1536],
     approximate: bool = True,
     threads: int = 1,
     query_count: int = -1
@@ -470,22 +470,22 @@ def main(
     ]
     kernels_cpp_1536d = [
         # C++:
-        # (
-        #     "HAMMING_U64X24_C",
-        #     cppyy.gbl.hamming_u64x24_c,
-        #     cppyy.gbl.HammingKernel.HAMMING_U64X24_C
-        # ),
-        # # SIMD:
-        # (
-        #     "HAMMING_B1536_VPOPCNTQ",
-        #     cppyy.gbl.hamming_b1536_vpopcntq,
-        #     cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ
-        # ),
-        # (
-        #     "HAMMING_B1536_VPOPCNTQ_3CSA",
-        #     cppyy.gbl.hamming_b1536_vpopcntq_3csa,
-        #     cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ_3CSA
-        # ),
+        (
+            "HAMMING_U64X24_C",
+            cppyy.gbl.hamming_u64x24_c,
+            cppyy.gbl.HammingKernel.HAMMING_U64X24_C
+        ),
+        # SIMD:
+        (
+            "HAMMING_B1536_VPOPCNTQ",
+            cppyy.gbl.hamming_b1536_vpopcntq,
+            cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ
+        ),
+        (
+            "HAMMING_B1536_VPOPCNTQ_3CSA",
+            cppyy.gbl.hamming_b1536_vpopcntq_3csa,
+            cppyy.gbl.HammingKernel.HAMMING_B1536_VPOPCNTQ_3CSA
+        ),
     ]
     standalone_kernels_cpp_pdx_128d = [
         (
@@ -510,11 +510,11 @@ def main(
             cppyy.gbl.hamming_b256_vpshufb_pdx,
             cppyy.gbl.HammingKernel.HAMMING_B256_VPSHUFB_PDX
         ),
-        (
-            "HAMMING_B256_XORLUT_PDX",
-            cppyy.gbl.hamming_b256_xorlut_pdx,
-            cppyy.gbl.HammingKernel.HAMMING_B256_XORLUT_PDX
-        ),
+        # (
+        #     "HAMMING_B256_XORLUT_PDX",
+        #     cppyy.gbl.hamming_b256_xorlut_pdx,
+        #     cppyy.gbl.HammingKernel.HAMMING_B256_XORLUT_PDX
+        # ),
     ]
     standalone_kernels_cpp_pdx_512d = [
         (
@@ -554,6 +554,7 @@ def main(
         256: standalone_kernels_cpp_pdx_256d,
         512: standalone_kernels_cpp_pdx_512d,
         1024: standalone_kernels_cpp_pdx_1024d,
+        1536: []
     }
 
     if query_count == -1:
