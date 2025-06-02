@@ -827,8 +827,8 @@ void fill_b256_xorluts(const uint8_t *query){
 //        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + ((d * 2) * 64), lut_xor_high);
 //        _mm512_storeu_si512(query_aware_b256_xorluts_avx512 + (((d * 2) + 1) * 64), lut_xor_low);
 
-        std::memcpy(query_aware_b256_xorluts_high + (d * 16), xor_lookup_tables[first_high], 16);
-        std::memcpy(query_aware_b256_xorluts_low + (d * 16), xor_lookup_tables[first_low], 16);
+        memcpy(query_aware_b256_xorluts_high + (d * 16), xor_lookup_tables[first_high], 16);
+        memcpy(query_aware_b256_xorluts_low + (d * 16), xor_lookup_tables[first_low], 16);
 
     }
 };
