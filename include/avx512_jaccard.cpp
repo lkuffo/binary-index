@@ -309,7 +309,7 @@ float jaccard_u64x2_c(uint8_t const *a, uint8_t const *b) {
     return 1.f - (intersection + 1.f) / (union_ + 1.f); // ! Avoid division by zero
 }
 
-inline uint64_t _mm128_reduce_add_epi64(__m256i vec) {
+inline uint64_t _mm128_reduce_add_epi64(__m128i vec) {
     __m128i hi64 = _mm_unpackhi_epi64(vec, vec);
     __m128i sum = _mm_add_epi64(vec, hi64);
     return static_cast<uint64_t>(_mm_cvtsi128_si64(sum));
@@ -325,7 +325,6 @@ float jaccard_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 
     __m128i low_mask = _mm_set1_epi8(0x0f);
     __m128i lookup = _mm_set_epi8(
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
     __m128i intersection_low = _mm_and_si128(intersection, low_mask);
@@ -356,7 +355,6 @@ float jaccard_b128_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *
 
     __m128i low_mask = _mm_set1_epi8(0x0f);
     __m128i lookup = _mm_set_epi8(
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
     __m128i intersection_low = _mm_and_si128(intersection, low_mask);
@@ -385,7 +383,6 @@ float jaccard_b128_vpshufb_sad_precomputed(
 
     __m128i low_mask = _mm_set1_epi8(0x0f);
     __m128i lookup = _mm_set_epi8(
-        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
     __m128i intersection_low = _mm_and_si128(intersection, low_mask);
