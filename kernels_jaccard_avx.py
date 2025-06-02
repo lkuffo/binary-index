@@ -928,31 +928,34 @@ def main(
         #
         # print("- passed!")
 
+        data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
+        queries = vectors[:query_count].copy()
+        warmup_repetition = get_warmup_repetition_n(len(vectors))
+
         # Provide FAISS benchmarking baselines:
         # print(f"Profiling FAISS over {count:,} vectors and {query_count} queries with Jaccard metric")
+        # benchmark_metadata['kernel_name'] = "FAISS"
         # stats = bench_faiss(
         #     vectors=vectors,
         #     k=k,
         #     threads=threads,
-        #     query_count = query_count
+        #     query_count = query_count,
+        #     warmup_repetition = warmup_repetition
         # )
         # print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
         # print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
-
         # Analyze all the kernels:
-        data_popcounts = np.bitwise_count(vectors).sum(axis=1).astype(np.uint32)
-        queries = vectors[:query_count].copy()
-        warmup_repetition = get_warmup_repetition_n(len(vectors))
         for name, _, kernel_id in kernels_cpp:
             # Warmup
             benchmark_metadata['kernel_name'] = name
             print(f"Profiling `{name}` in standalone c++ over {count:,} vectors and {query_count} queries")
             stats = bench_standalone(vectors=vectors, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
-            print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-            print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
-            print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
             if len(output): save_results(stats, benchmark_metadata, output)
+            else:
+                print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+                print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
+                print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         if len(vectors) % 256 == 0:
             vectors_pdx = row_major_to_pdx(vectors, 256)
@@ -960,10 +963,12 @@ def main(
                 benchmark_metadata['kernel_name'] = name
                 print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
                 stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
-                print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-                print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
-                print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
                 if len(output): save_results(stats, benchmark_metadata, output)
+                else:
+                    print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+                    print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
+                    print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
+
 
 
 if __name__ == "__main__":

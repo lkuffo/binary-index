@@ -638,6 +638,7 @@ def main(
         queries = vectors[:query_count].copy()
         # Provide FAISS benchmarking baselines:
         print(f"Profiling FAISS over {count:,} vectors and {query_count} queries with Hamming metric")
+        benchmark_metadata['kernel_name'] = "FAISS"
         stats = bench_faiss(
             vectors=vectors,
             queries=queries,
@@ -646,9 +647,11 @@ def main(
             query_count=query_count,
             warmup_repetition=warmup_repetition
         )
-        print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
-        print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
-        print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
+        if len(output): save_results(stats, benchmark_metadata, output)
+        else:
+            print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+            print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
+            print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         # Analyze all the kernels:
         for name, _, kernel_id in kernels_cpp:
@@ -659,6 +662,10 @@ def main(
             print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
             print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
             if len(output): save_results(stats, benchmark_metadata, output)
+            else:
+                print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+                print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
+                print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         if len(vectors) % 256 == 0:
             vectors_pdx = row_major_to_pdx(vectors, 256)
@@ -670,6 +677,10 @@ def main(
                 print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
                 print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
                 if len(output): save_results(stats, benchmark_metadata, output)
+                else:
+                    print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
+                    print(f"- Elapsed: {stats['elapsed_s']:,.4f} s")
+                    print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
 
 if __name__ == "__main__":
