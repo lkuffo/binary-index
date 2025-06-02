@@ -393,26 +393,26 @@ def main(
 
     kernels_cpp_1024d = [
         # C++:
-        # (
-        #     "HAMMING_U64X16_C",
-        #     cppyy.gbl.hamming_u64x16_c,
-        #     cppyy.gbl.HammingKernel.HAMMING_U64X16_C
-        # ),
-        # (
-        #     "HAMMING_U8X128_C",
-        #     cppyy.gbl.hamming_u8x128_c,
-        #     cppyy.gbl.HammingKernel.HAMMING_U8X128_C
-        # ),
-        # (
-        #     "HAMMING_U64X16_CSA3_C",
-        #     cppyy.gbl.hamming_u64x16_csa3_c,
-        #     cppyy.gbl.HammingKernel.HAMMING_U64X16_CSA3_C
-        # ),
-        # (
-        #     "HAMMING_U64X16_CSA15_CPP",
-        #     cppyy.gbl.hamming_u64x16_csa15_cpp,
-        #     cppyy.gbl.HammingKernel.HAMMING_U64X16_CSA15_CPP
-        # ),
+        (
+            "HAMMING_U64X16_C",
+            cppyy.gbl.hamming_u64x16_c,
+            cppyy.gbl.HammingKernel.HAMMING_U64X16_C
+        ),
+        (
+            "HAMMING_U8X128_C",
+            cppyy.gbl.hamming_u8x128_c,
+            cppyy.gbl.HammingKernel.HAMMING_U8X128_C
+        ),
+        (
+            "HAMMING_U64X16_CSA3_C",
+            cppyy.gbl.hamming_u64x16_csa3_c,
+            cppyy.gbl.HammingKernel.HAMMING_U64X16_CSA3_C
+        ),
+        (
+            "HAMMING_U64X16_CSA15_CPP",
+            cppyy.gbl.hamming_u64x16_csa15_cpp,
+            cppyy.gbl.HammingKernel.HAMMING_U64X16_CSA15_CPP
+        ),
         # SIMD:
         (
             "HAMMING_B1024_VPOPCNTQ",

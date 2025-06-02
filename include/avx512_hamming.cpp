@@ -180,14 +180,13 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
 }
 
 float hamming_u64x4_c(uint8_t const *a, uint8_t const *b) {
-    uint32_t intersection = 0, union_ = 0;
+    uint32_t popcnt = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 #pragma unroll
     for (size_t i = 0; i != 4; ++i)
-        intersection += __builtin_popcountll(a64[i] & b64[i]),
-        union_ += __builtin_popcountll(a64[i] | b64[i]);
-    return 1.f - (intersection + 1.f) / (union_ + 1.f); // ! Avoid division by zero
+        popcnt += __builtin_popcountll(a64[i] ^ b64[i]),
+    return popcnt;
 }
 
 inline uint64_t _mm256_reduce_add_epi64(__m256i vec) {
@@ -580,23 +579,21 @@ void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *secon
 
 
 float hamming_u8x128_c(uint8_t const *a, uint8_t const *b) {
-    uint32_t intersection = 0, union_ = 0;
+    uint32_t popcnt = 0;
 #pragma unroll
     for (size_t i = 0; i != 128; ++i)
-        intersection += __builtin_popcount(a[i] & b[i]),
-        union_ += __builtin_popcount(a[i] | b[i]);
-    return 1.f - (intersection + 1.f) / (union_ + 1.f); // ! Avoid division by zero
+        popcnt += __builtin_popcount(a[i] & b[i]);
+    return popcnt; // ! Avoid division by zero
 }
 
 float hamming_u64x16_c(uint8_t const *a, uint8_t const *b) {
-    uint32_t intersection = 0, union_ = 0;
+    uint32_t popcnt = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 #pragma unroll
     for (size_t i = 0; i != 16; ++i)
-        intersection += __builtin_popcountll(a64[i] & b64[i]),
-        union_ += __builtin_popcountll(a64[i] | b64[i]);
-    return 1.f - (intersection + 1.f) / (union_ + 1.f); // ! Avoid division by zero
+        popcnt += __builtin_popcountll(a64[i] ^ b64[i]);
+    return popcnt; // ! Avoid division by zero
 }
 
 // Define the AVX-512 variant using the `vpopcntq` instruction.
@@ -665,24 +662,15 @@ float hamming_u64x16_csa3_c(uint8_t const *a, uint8_t const *b) {
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 
-    int intersection =
-        popcount_csa3(a64[0] & b64[0], a64[1] & b64[1], a64[2] & b64[2]) +
-        popcount_csa3(a64[3] & b64[3], a64[4] & b64[4], a64[5] & b64[5]) +
-        popcount_csa3(a64[6] & b64[6], a64[7] & b64[7], a64[8] & b64[8]) +
-        popcount_csa3(a64[9] & b64[9], a64[10] & b64[10], a64[11] & b64[11]) +
-        popcount_csa3(a64[12] & b64[12], a64[13] & b64[13], a64[14] & b64[14]) +
-        __builtin_popcountll(a64[15] & b64[15]);
+    int popcnt =
+        popcount_csa3(a64[0] ^ b64[0], a64[1] ^ b64[1], a64[2] ^ b64[2]) +
+        popcount_csa3(a64[3] ^ b64[3], a64[4] ^ b64[4], a64[5] ^ b64[5]) +
+        popcount_csa3(a64[6] ^ b64[6], a64[7] ^ b64[7], a64[8] ^ b64[8]) +
+        popcount_csa3(a64[9] ^ b64[9], a64[10] ^ b64[10], a64[11] ^ b64[11]) +
+        popcount_csa3(a64[12] ^ b64[12], a64[13] ^ b64[13], a64[14] ^ b64[14]) +
+        __builtin_popcountll(a64[15] ^ b64[15]);
 
-
-    int union_ =
-        popcount_csa3(a64[0] | b64[0], a64[1] | b64[1], a64[2] | b64[2]) +
-        popcount_csa3(a64[3] | b64[3], a64[4] | b64[4], a64[5] | b64[5]) +
-        popcount_csa3(a64[6] | b64[6], a64[7] | b64[7], a64[8] | b64[8]) +
-        popcount_csa3(a64[9] | b64[9], a64[10] | b64[10], a64[11] | b64[11]) +
-        popcount_csa3(a64[12] | b64[12], a64[13] | b64[13], a64[14] | b64[14]) +
-        __builtin_popcountll(a64[15] | b64[15]);
-
-    return 1.f - (intersection + 1.f) / (union_ + 1.f); // ! Avoid division by zero
+    return popcnt;
 }
 
 // That CSA can be scaled further to fold 15 population counts into 4.
@@ -734,21 +722,14 @@ float hamming_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b) {
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 
-    int intersection = popcount_csa15(
-        a64[0] & b64[0], a64[1] & b64[1], a64[2] & b64[2], a64[3] & b64[3],
-        a64[4] & b64[4], a64[5] & b64[5], a64[6] & b64[6], a64[7] & b64[7],
-        a64[8] & b64[8], a64[9] & b64[9], a64[10] & b64[10], a64[11] & b64[11],
-        a64[12] & b64[12], a64[13] & b64[13], a64[14] & b64[14]) +
-        __builtin_popcountll(a64[15] & b64[15]);
+    int popcnt = popcount_csa15(
+        a64[0] ^ b64[0], a64[1] ^ b64[1], a64[2] ^ b64[2], a64[3] ^ b64[3],
+        a64[4] ^ b64[4], a64[5] ^ b64[5], a64[6] ^ b64[6], a64[7] ^ b64[7],
+        a64[8] ^ b64[8], a64[9] ^ b64[9], a64[10] ^ b64[10], a64[11] ^ b64[11],
+        a64[12] ^ b64[12], a64[13] ^ b64[13], a64[14] ^ b64[14]) +
+        __builtin_popcountll(a64[15] ^ b64[15]);
 
-    int union_ = popcount_csa15(
-        a64[0] | b64[0], a64[1] | b64[1], a64[2] | b64[2], a64[3] | b64[3],
-        a64[4] | b64[4], a64[5] | b64[5], a64[6] | b64[6], a64[7] | b64[7],
-        a64[8] | b64[8], a64[9] | b64[9], a64[10] | b64[10], a64[11] | b64[11],
-        a64[12] | b64[12], a64[13] | b64[13], a64[14] | b64[14]) +
-        __builtin_popcountll(a64[15] | b64[15]);
-
-    return 1.f - (intersection + 1.f) / (union_ + 1.f); // ! Avoid division by zero
+    return popcnt; // ! Avoid division by zero
 }
 
 
