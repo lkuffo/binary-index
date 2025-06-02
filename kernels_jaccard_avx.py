@@ -316,13 +316,13 @@ def save_results(
     if write_header:
         writer.writerow([
             "kernel", "bop/s", "elapsed_ms",
-            "ndims", "n_vectors", "n_queries", "knn"
+            "ndim", "n_vectors", "n_queries", "knn"
         ])
     bops = float(stats['bit_ops_per_s']) / 1e9
     elapsed = float(stats['elapsed_s']) * 1000
     writer.writerow([
         metadata.get("kernel_name", ""), bops, elapsed,
-        metadata.get("ndims", 0), metadata.get("n_vectors", 0), metadata.get("query_count", 0), metadata.get("knn", 0)
+        metadata.get("ndim", 0), metadata.get("n_vectors", 0), metadata.get("query_count", 0), metadata.get("knn", 0)
     ])
     f.close()
 
@@ -417,9 +417,9 @@ def get_warmup_repetition_n(
 ) -> int:
     if n_vectors <= 1024:
         return 1000
-    elif n_vectors <= 16384:
+    elif n_vectors <= 131072:
         return 100
-    elif n_vectors <= 524288:
+    elif n_vectors <= 1048576:
         return 10
     return 3
 
@@ -566,7 +566,6 @@ def main(
 
     benchmark_metadata = {
         "query_count": query_count,
-        "ndims": ndims,
         "n_vectors": count,
         "knn": k
     }
@@ -903,6 +902,7 @@ def main(
 
     # Check which dimensions should be covered:
     for ndim in ndims:
+        benchmark_metadata["ndim"] = ndim
         print("-" * 80)
         print(f"Testing {ndim:,}d kernels")
         kernels_cpp = kernels_cpp_per_dimension.get(ndim, [])
