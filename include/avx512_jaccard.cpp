@@ -766,7 +766,7 @@ inline float jaccard_b256_vpshufb_sad_precomputed(
     __m256i intersection = _mm256_and_epi64(first, second);
 
     __m256i low_mask = _mm256_set1_epi8(0x0f);
-    static __m256i lookup = _mm256_set_epi8(
+    __m256i lookup = _mm256_set_epi8(
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
 
