@@ -90,7 +90,7 @@ static uint8_t intersections_tmp[256];
 static uint8_t unions_tmp[256];
 static float distances_tmp[256];
 
-inline voidjaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result[4];
     __m512i unions_result[4];
     // Load initial values
@@ -120,7 +120,7 @@ inline voidjaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const 
 }
 
 // TODO: Change to avx512?
-inline voidjaccard_b128_vpopcntq_precomputed_pdx(
+inline void jaccard_b128_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -150,7 +150,7 @@ inline voidjaccard_b128_vpopcntq_precomputed_pdx(
 }
 
 
-inline voidjaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -201,7 +201,7 @@ inline voidjaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *
 }
 
 
-inline voidjaccard_b128_vpshufb_precomputed_pdx(
+inline void jaccard_b128_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -250,7 +250,7 @@ inline voidjaccard_b128_vpshufb_precomputed_pdx(
     }
 }
 
-inline voidjaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -436,7 +436,7 @@ inline float jaccard_b128_vpopcntq_precomputed(
 // Comments:
 //          This version does 2 popcounts
 // TODO: Change to avx512?
-inline voidjaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result[4];
     __m512i unions_result[4];
     // Load initial values
@@ -466,7 +466,7 @@ inline voidjaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const 
 }
 
 // TODO: Change to avx512?
-inline voidjaccard_b256_vpopcntq_precomputed_pdx(
+inline void jaccard_b256_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -510,7 +510,7 @@ inline voidjaccard_b256_vpopcntq_precomputed_pdx(
 //                  Are the shuffles being a bottleneck?
 // For some reason using AVX512 here hurts performance quite badly
 // but only when the vectors exceed the size of the cache
-inline voidjaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -561,7 +561,7 @@ inline voidjaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *
 }
 
 
-inline voidjaccard_b256_vpshufb_precomputed_pdx(
+inline void jaccard_b256_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -624,7 +624,7 @@ inline voidjaccard_b256_vpshufb_precomputed_pdx(
 //          SPR   | SHUFFLE: 1 cycle p1,5 - POPCNT: 3 cycles p5
 //                  ...
 //
-inline voidjaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -930,7 +930,7 @@ inline float jaccard_b512_vpopcntq_precomputed(
 }
 
 
-inline voidjaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result_a[4];
     __m512i intersections_result_b[4];
     __m512i unions_result_a[4];
@@ -980,7 +980,7 @@ inline voidjaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const 
     }
 }
 
-inline voidjaccard_b512_vpopcntq_precomputed_pdx(
+inline void jaccard_b512_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1025,7 +1025,7 @@ inline voidjaccard_b512_vpopcntq_precomputed_pdx(
 
 
 
-inline voidjaccard_b512_vpshufb_precomputed_pdx(
+inline void jaccard_b512_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1090,7 +1090,7 @@ inline voidjaccard_b512_vpshufb_precomputed_pdx(
     }
 };
 
-inline voidjaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result_a[8];
     __m256i intersections_result_b[8];
@@ -1183,7 +1183,7 @@ static uint8_t unions_tmp_1024_d[256];
 //// 1-to-256 vectors
 //// second_vector is a 256*1024 matrix in a column-major layout
 //// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-//inline voidjaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+//inline void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
 //    __m256i intersections_result_a[8];
 //    __m256i intersections_result_b[8];
 //    __m256i intersections_result_c[8];
@@ -1272,7 +1272,7 @@ static uint8_t unions_tmp_1024_d[256];
 // 1-to-256 vectors
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-inline voidjaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result_a[4];
     __m512i intersections_result_b[4];
     __m512i intersections_result_c[4];
@@ -1358,7 +1358,7 @@ inline voidjaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const
     }
 }
 
-inline voidjaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void jaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result_a[8];
     __m256i intersections_result_b[8];
@@ -1486,7 +1486,7 @@ inline voidjaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8
     }
 };
 
-inline voidjaccard_b1024_vpshufb_precomputed_pdx(
+inline void jaccard_b1024_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1601,7 +1601,7 @@ inline voidjaccard_b1024_vpshufb_precomputed_pdx(
 // 1-to-256 vectors
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-inline voidjaccard_b1024_vpopcntq_precomputed_pdx(
+inline void jaccard_b1024_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1670,7 +1670,7 @@ inline voidjaccard_b1024_vpopcntq_precomputed_pdx(
     }
 }
 
-//inline voidjaccard_b1024_vpopcntq_precomputed_pdx(
+//inline void jaccard_b1024_vpopcntq_precomputed_pdx(
 //    uint8_t const *first_vector, uint8_t const *second_vector,
 //    uint32_t const first_popcount, uint32_t const *second_popcounts
 //) {
