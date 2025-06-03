@@ -90,7 +90,7 @@ static uint8_t intersections_tmp[256];
 static uint8_t unions_tmp[256];
 static float distances_tmp[256];
 
-void jaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result[4];
     __m512i unions_result[4];
     // Load initial values
@@ -120,7 +120,7 @@ void jaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 }
 
 // TODO: Change to avx512?
-void jaccard_b128_vpopcntq_precomputed_pdx(
+inline voidjaccard_b128_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -150,7 +150,7 @@ void jaccard_b128_vpopcntq_precomputed_pdx(
 }
 
 
-void jaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -201,7 +201,7 @@ void jaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 }
 
 
-void jaccard_b128_vpshufb_precomputed_pdx(
+inline voidjaccard_b128_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -250,7 +250,7 @@ void jaccard_b128_vpshufb_precomputed_pdx(
     }
 }
 
-void jaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -298,7 +298,7 @@ void jaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
 };
 
 
-float jaccard_u64x2_c(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u64x2_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -316,7 +316,7 @@ inline uint64_t _mm128_reduce_add_epi64(__m128i vec) {
 }
 
 __attribute__((target("avx2,bmi2,avx")))
-float jaccard_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
     __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
 
@@ -346,7 +346,7 @@ float jaccard_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 
 
 __attribute__((target("avx2,bmi2,avx")))
-float jaccard_b128_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b128_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
     __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
 
@@ -372,7 +372,7 @@ float jaccard_b128_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *
 }
 
 __attribute__((target("avx2,bmi2,avx")))
-float jaccard_b128_vpshufb_sad_precomputed(
+inline float jaccard_b128_vpshufb_sad_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -400,7 +400,7 @@ float jaccard_b128_vpshufb_sad_precomputed(
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
     __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
 
@@ -410,7 +410,7 @@ float jaccard_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 }
 
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b128_vpopcntq_precomputed(
+inline float jaccard_b128_vpopcntq_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -436,7 +436,7 @@ float jaccard_b128_vpopcntq_precomputed(
 // Comments:
 //          This version does 2 popcounts
 // TODO: Change to avx512?
-void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result[4];
     __m512i unions_result[4];
     // Load initial values
@@ -466,7 +466,7 @@ void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 }
 
 // TODO: Change to avx512?
-void jaccard_b256_vpopcntq_precomputed_pdx(
+inline voidjaccard_b256_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -510,7 +510,7 @@ void jaccard_b256_vpopcntq_precomputed_pdx(
 //                  Are the shuffles being a bottleneck?
 // For some reason using AVX512 here hurts performance quite badly
 // but only when the vectors exceed the size of the cache
-void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -561,7 +561,7 @@ void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
 }
 
 
-void jaccard_b256_vpshufb_precomputed_pdx(
+inline voidjaccard_b256_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -624,7 +624,7 @@ void jaccard_b256_vpshufb_precomputed_pdx(
 //          SPR   | SHUFFLE: 1 cycle p1,5 - POPCNT: 3 cycles p5
 //                  ...
 //
-void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result[8];
     __m256i unions_result[8];
@@ -672,7 +672,7 @@ void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t cons
 };
 
 
-float jaccard_u64x4_c(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u64x4_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -698,7 +698,7 @@ inline uint64_t _mm256_reduce_add_epi64(__m256i vec) {
  * Source: https://github.com/CountOnes/hamming_weight/blob/1dd7554c0fc39e01c9d7fa54372fd4eccf458875/src/sse_jaccard_index.c#L17
  */
 __attribute__((target("avx2,bmi2,avx")))
-float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
@@ -729,7 +729,7 @@ float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 
 
 __attribute__((target("avx2,bmi2,avx")))
-float jaccard_b256_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b256_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
@@ -756,7 +756,7 @@ float jaccard_b256_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *
 }
 
 __attribute__((target("avx2,bmi2,avx")))
-float jaccard_b256_vpshufb_sad_precomputed(
+inline float jaccard_b256_vpshufb_sad_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -785,7 +785,7 @@ float jaccard_b256_vpshufb_sad_precomputed(
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
@@ -795,7 +795,7 @@ float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 }
 
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b256_vpopcntq_precomputed(
+inline float jaccard_b256_vpopcntq_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -816,7 +816,7 @@ float jaccard_b256_vpopcntq_precomputed(
 ///////////////////////////////
 ///////////////////////////////
 
-float jaccard_u64x8_c(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u64x8_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -833,7 +833,7 @@ static uint8_t intersections_tmp_512_b[256];
 static uint8_t unions_tmp_512_a[256];
 static uint8_t unions_tmp_512_b[256];
 
-float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
 
@@ -868,7 +868,7 @@ float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 
 
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b512_vpshufb_sad_precomputed(
+inline float jaccard_b512_vpshufb_sad_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -902,7 +902,7 @@ float jaccard_b512_vpshufb_sad_precomputed(
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
 
@@ -915,7 +915,7 @@ float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b512_vpopcntq_precomputed(
+inline float jaccard_b512_vpopcntq_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -930,7 +930,7 @@ float jaccard_b512_vpopcntq_precomputed(
 }
 
 
-void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result_a[4];
     __m512i intersections_result_b[4];
     __m512i unions_result_a[4];
@@ -980,7 +980,7 @@ void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
     }
 }
 
-void jaccard_b512_vpopcntq_precomputed_pdx(
+inline voidjaccard_b512_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1025,7 +1025,7 @@ void jaccard_b512_vpopcntq_precomputed_pdx(
 
 
 
-void jaccard_b512_vpshufb_precomputed_pdx(
+inline voidjaccard_b512_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1090,7 +1090,7 @@ void jaccard_b512_vpshufb_precomputed_pdx(
     }
 };
 
-void jaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result_a[8];
     __m256i intersections_result_b[8];
@@ -1183,7 +1183,7 @@ static uint8_t unions_tmp_1024_d[256];
 //// 1-to-256 vectors
 //// second_vector is a 256*1024 matrix in a column-major layout
 //// Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-//void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+//inline voidjaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
 //    __m256i intersections_result_a[8];
 //    __m256i intersections_result_b[8];
 //    __m256i intersections_result_c[8];
@@ -1272,7 +1272,7 @@ static uint8_t unions_tmp_1024_d[256];
 // 1-to-256 vectors
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result_a[4];
     __m512i intersections_result_b[4];
     __m512i intersections_result_c[4];
@@ -1358,7 +1358,7 @@ void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     }
 }
 
-void jaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline voidjaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i low_mask = _mm256_set1_epi8(0x0f);
     __m256i intersections_result_a[8];
     __m256i intersections_result_b[8];
@@ -1486,7 +1486,7 @@ void jaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t con
     }
 };
 
-void jaccard_b1024_vpshufb_precomputed_pdx(
+inline voidjaccard_b1024_vpshufb_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1601,7 +1601,7 @@ void jaccard_b1024_vpshufb_precomputed_pdx(
 // 1-to-256 vectors
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-void jaccard_b1024_vpopcntq_precomputed_pdx(
+inline voidjaccard_b1024_vpopcntq_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
@@ -1670,7 +1670,7 @@ void jaccard_b1024_vpopcntq_precomputed_pdx(
     }
 }
 
-//void jaccard_b1024_vpopcntq_precomputed_pdx(
+//inline voidjaccard_b1024_vpopcntq_precomputed_pdx(
 //    uint8_t const *first_vector, uint8_t const *second_vector,
 //    uint32_t const first_popcount, uint32_t const *second_popcounts
 //) {
@@ -1739,7 +1739,7 @@ void jaccard_b1024_vpopcntq_precomputed_pdx(
 //    }
 //}
 
-float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
 #pragma unroll
     for (size_t i = 0; i != 128; ++i)
@@ -1748,7 +1748,7 @@ float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b) {
     return 1.f - (intersection + 1.f) / (union_ + 1.f); // ! Avoid division by zero
 }
 
-float jaccard_u64x16_c(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u64x16_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -1762,7 +1762,7 @@ float jaccard_u64x16_c(uint8_t const *a, uint8_t const *b) {
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -1781,7 +1781,7 @@ float jaccard_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpopcntq_precomputed(
+inline float jaccard_b1024_vpopcntq_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -1804,7 +1804,7 @@ float jaccard_b1024_vpopcntq_precomputed(
 // It resorts to cheaper byte-shuffling instructions, than population counts.
 // Source: https://github.com/CountOnes/hamming_weight/blob/1dd7554c0fc39e01c9d7fa54372fd4eccf458875/src/sse_jaccard_index.c#L17
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -1847,7 +1847,7 @@ float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const 
 }
 
 
-float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -1900,7 +1900,7 @@ float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *seco
 
 
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpshufb_sad_precomputed(
+inline float jaccard_b1024_vpshufb_sad_precomputed(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const second_popcount
 ) {
@@ -1943,7 +1943,7 @@ float jaccard_b1024_vpshufb_sad_precomputed(
 // # Define the AVX-512 variant using the `vpshufb` and `vpdpbusd` instruction.
 // # It replaces the horizontal addition with a dot-product.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpshufb_dpb(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b1024_vpshufb_dpb(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -2003,7 +2003,7 @@ inline int popcount_csa3(uint64_t x, uint64_t y, uint64_t z) {
     return 2 * __builtin_popcountll(major) + __builtin_popcountll(odd);
 }
 
-float jaccard_u64x16_csa3_c(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u64x16_csa3_c(uint8_t const *a, uint8_t const *b) {
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 
@@ -2072,7 +2072,7 @@ constexpr int popcount_csa15(
     return count_ones + 2 * count_twos + 4 * count_four + 8 * count_eight;
 }
 
-float jaccard_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b) {
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 
@@ -2100,7 +2100,7 @@ float jaccard_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b) {
 ///////////////////////////////
 ///////////////////////////////
 
-float jaccard_u64x24_c(uint8_t const *a, uint8_t const *b) {
+inline float jaccard_u64x24_c(uint8_t const *a, uint8_t const *b) {
     uint32_t intersection = 0, union_ = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -2115,7 +2115,7 @@ float jaccard_u64x24_c(uint8_t const *a, uint8_t const *b) {
 // Define the AVX-512 variant using the `vpopcntq` instruction for 1536d vectors
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1536_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b1536_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first0 = _mm512_loadu_si512((__m512i const*)(first_vector + 64 * 0));
     __m512i first1 = _mm512_loadu_si512((__m512i const*)(first_vector + 64 * 1));
     __m512i first2 = _mm512_loadu_si512((__m512i const*)(first_vector + 64 * 2));
@@ -2139,7 +2139,7 @@ float jaccard_b1536_vpopcntq(uint8_t const *first_vector, uint8_t const *second_
 // of population counts for the 1536-dimensional case to the 1024-dimensional case,
 // at the cost of several ternary bitwise operations.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1536_vpopcntq_3csa(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float jaccard_b1536_vpopcntq_3csa(uint8_t const *first_vector, uint8_t const *second_vector) {
 
     __m512i first0 = _mm512_loadu_si512((__m512i const*)(first_vector + 64 * 0));
     __m512i first1 = _mm512_loadu_si512((__m512i const*)(first_vector + 64 * 1));

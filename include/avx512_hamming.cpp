@@ -64,7 +64,7 @@ static uint32_t distances_tmp[256];
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i popcnt_result[4];
     // Load initial values
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
@@ -90,7 +90,7 @@ void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-void hamming_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i popcnt_result[4];
     __m512i lookup = _mm512_set_epi8(
@@ -131,7 +131,7 @@ void hamming_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second
     }
 }
 
-float hamming_u64x2_c(uint8_t const *a, uint8_t const *b) {
+inline float hamming_u64x2_c(uint8_t const *a, uint8_t const *b) {
     uint32_t popcnt = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -162,7 +162,7 @@ inline uint64_t _mm128_reduce_add_epi64(__m128i vec) {
  * Source: https://github.com/CountOnes/hamming_weight/blob/1dd7554c0fc39e01c9d7fa54372fd4eccf458875/src/sse_jaccard_index.c#L17
  */
 __attribute__((target("avx2,bmi2,avx")))
-float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
     __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
 
@@ -187,7 +187,7 @@ float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m128i first = _mm_loadu_epi8((__m128i const*)(first_vector));
     __m128i second = _mm_loadu_epi8((__m128i const*)(second_vector));
 
@@ -204,7 +204,7 @@ float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i popcnt_result[4];
     // Load initial values
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 8 registers)
@@ -230,7 +230,7 @@ void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i popcnt_result[4];
     __m512i lookup = _mm512_set_epi8(
@@ -281,7 +281,7 @@ static uint8_t* query_aware_b256_xorluts_low[1024];
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i popcnt_result[4];
     // Load initial values
@@ -326,7 +326,7 @@ void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_
     }
 }
 
-float hamming_u64x4_c(uint8_t const *a, uint8_t const *b) {
+inline float hamming_u64x4_c(uint8_t const *a, uint8_t const *b) {
     uint32_t popcnt = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -342,7 +342,7 @@ float hamming_u64x4_c(uint8_t const *a, uint8_t const *b) {
  * Source: https://github.com/CountOnes/hamming_weight/blob/1dd7554c0fc39e01c9d7fa54372fd4eccf458875/src/sse_jaccard_index.c#L17
  */
 __attribute__((target("avx2,bmi2,avx")))
-float hamming_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
@@ -368,7 +368,7 @@ float hamming_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m256i first = _mm256_loadu_epi8((__m256i const*)(first_vector));
     __m256i second = _mm256_loadu_epi8((__m256i const*)(second_vector));
 
@@ -384,7 +384,7 @@ float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 ///////////////////////////////
 ///////////////////////////////
 
-float hamming_u64x8_c(uint8_t const *a, uint8_t const *b) {
+inline float hamming_u64x8_c(uint8_t const *a, uint8_t const *b) {
     uint32_t popcnt = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -397,7 +397,7 @@ float hamming_u64x8_c(uint8_t const *a, uint8_t const *b) {
 static uint8_t popcnt_tmp_512_a[256];
 static uint8_t popcnt_tmp_512_b[256];
 
-float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
 
@@ -428,7 +428,7 @@ float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *secon
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float hamming_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
 
@@ -438,7 +438,7 @@ float hamming_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_v
 }
 
 
-void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i popcnt_result_a[4];
     __m512i popcnt_result_b[4];
     for (size_t i = 0; i < 4; ++i) { // 256 vectors at a time (using 4 _m512i registers)
@@ -479,7 +479,7 @@ void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *secon
 
 // 1-to-256 vectors
 // second_vector is a 256*256 matrix in a column-major layout
-void hamming_b512_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b512_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i popcnt_result_a[4];
     __m512i popcnt_result_b[4];
@@ -556,7 +556,7 @@ static uint8_t popcnt_tmp_1024_d[256];
 // 1-to-256 vectors
 // second_vector is a 256*1024 matrix in a column-major layout
 // Processing the 1024 dimensions in 4 groups of 32 words each to not overflow the uint8_t accumulators
-void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i popcnt_result_a[4];
     __m512i popcnt_result_b[4];
     __m512i popcnt_result_c[4];
@@ -620,7 +620,7 @@ void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *seco
     }
 }
 
-void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i popcnt_result_a[4];
     __m512i popcnt_result_b[4];
@@ -726,7 +726,7 @@ void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *secon
 }
 
 
-float hamming_u8x128_c(uint8_t const *a, uint8_t const *b) {
+inline float hamming_u8x128_c(uint8_t const *a, uint8_t const *b) {
     uint32_t popcnt = 0;
 #pragma unroll
     for (size_t i = 0; i != 128; ++i)
@@ -734,7 +734,7 @@ float hamming_u8x128_c(uint8_t const *a, uint8_t const *b) {
     return popcnt;
 }
 
-float hamming_u64x16_c(uint8_t const *a, uint8_t const *b) {
+inline float hamming_u64x16_c(uint8_t const *a, uint8_t const *b) {
     uint32_t popcnt = 0;
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
@@ -747,7 +747,7 @@ float hamming_u64x16_c(uint8_t const *a, uint8_t const *b) {
 // Define the AVX-512 variant using the `vpopcntq` instruction.
 // It's known to over-rely on port 5 on x86 CPUs, so the next `vpshufb` variant should be faster.
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float hamming_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -759,7 +759,7 @@ float hamming_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_
     return _mm512_reduce_add_epi64(popcnt_start) + _mm512_reduce_add_epi64(popcnt_end);
 }
 
-float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
+inline float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i first_start = _mm512_loadu_si512((__m512i const*)(first_vector));
     __m512i first_end = _mm512_loadu_si512((__m512i const*)(first_vector + 64));
     __m512i second_start = _mm512_loadu_si512((__m512i const*)(second_vector));
@@ -804,7 +804,7 @@ inline int popcount_csa3(uint64_t x, uint64_t y, uint64_t z) {
     return 2 * __builtin_popcountll(major) + __builtin_popcountll(odd);
 }
 
-float hamming_u64x16_csa3_c(uint8_t const *a, uint8_t const *b) {
+inline float hamming_u64x16_csa3_c(uint8_t const *a, uint8_t const *b) {
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 
@@ -864,7 +864,7 @@ constexpr int popcount_csa15(
     return count_ones + 2 * count_twos + 4 * count_four + 8 * count_eight;
 }
 
-float hamming_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b) {
+inline float hamming_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b) {
     uint64_t const *a64 = (uint64_t const *)a;
     uint64_t const *b64 = (uint64_t const *)b;
 
@@ -955,7 +955,7 @@ std::vector<KNNCandidate> hamming_standalone_partial_sort(
     return result;
 }
 
-void fill_b256_xorluts(const uint8_t *query){
+inline void fill_b256_xorluts(const uint8_t *query){
     for (size_t d = 0; d < 32; ++d){
         uint8_t first_high = (query[d] & 0xF0) >> 4;
         uint8_t first_low = query[d] & 0x0F;

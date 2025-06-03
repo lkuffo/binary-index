@@ -131,44 +131,44 @@ enum HammingKernel {
 //
 // 128 region
 //
-float hamming_u64x2_c(uint8_t const *a, uint8_t const *b);
-float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
-float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b128_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_u64x2_c(uint8_t const *a, uint8_t const *b);
+inline float hamming_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b128_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 //
 // 256 region
 //
-float hamming_u64x4_c(uint8_t const *a, uint8_t const *b);
-float hamming_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
-float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_u64x4_c(uint8_t const *a, uint8_t const *b);
+inline float hamming_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b256_xorlut_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 //
 // 512 region
 //
-float hamming_u64x8_c(uint8_t const *a, uint8_t const *b);
-float hamming_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b512_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_u64x8_c(uint8_t const *a, uint8_t const *b);
+inline float hamming_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b512_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 
 //
 // 1024 region
 //
-float hamming_u8x128_c(uint8_t const *a, uint8_t const *b);
-float hamming_u64x16_c(uint8_t const *a, uint8_t const *b);
-float hamming_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
-float hamming_u64x16_csa3_c(uint8_t const *a, uint8_t const *b);
-float hamming_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b);
-void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_u8x128_c(uint8_t const *a, uint8_t const *b);
+inline float hamming_u64x16_c(uint8_t const *a, uint8_t const *b);
+inline float hamming_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float hamming_u64x16_csa3_c(uint8_t const *a, uint8_t const *b);
+inline float hamming_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b);
+inline void hamming_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void hamming_b1024_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 
 std::vector<KNNCandidate> hamming_standalone(

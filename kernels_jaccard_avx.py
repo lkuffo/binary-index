@@ -214,82 +214,82 @@ enum JaccardKernel {
 //
 // 128 region
 //
-float jaccard_u64x2_c(uint8_t const *a, uint8_t const *b);
-float jaccard_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b128_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b128_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
-float jaccard_b128_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const second_popcount);
-void jaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b128_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
-void jaccard_b128_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline float jaccard_u64x2_c(uint8_t const *a, uint8_t const *b);
+inline float jaccard_b128_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b128_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b128_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b128_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+inline float jaccard_b128_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const second_popcount);
+inline void jaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b128_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b128_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b128_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline void jaccard_b128_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
 
 //
 // 256 region
 //
-float jaccard_u64x4_c(uint8_t const *a, uint8_t const *b);
-float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b256_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b256_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
-float jaccard_b256_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const second_popcount);
-void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b256_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
-void jaccard_b256_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline float jaccard_u64x4_c(uint8_t const *a, uint8_t const *b);
+inline float jaccard_b256_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b256_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b256_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b256_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+inline float jaccard_b256_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const second_popcount);
+inline void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b256_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline void jaccard_b256_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
 //
 // 512 region
 //
-float jaccard_u64x8_c(uint8_t const *a, uint8_t const *b);
-float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b512_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
+inline float jaccard_u64x8_c(uint8_t const *a, uint8_t const *b);
+inline float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b512_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b512_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
-void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b512_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
-void jaccard_b512_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const *second_popcounts);
-void jaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b512_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+inline void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b512_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline void jaccard_b512_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline void jaccard_b512_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 
 
 //
 // 1024 region
 //
-float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b);
-float jaccard_u64x16_c(uint8_t const *a, uint8_t const *b);
-float jaccard_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_u8x128_c(uint8_t const *a, uint8_t const *b);
+inline float jaccard_u64x16_c(uint8_t const *a, uint8_t const *b);
+inline float jaccard_b1024_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b1024_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpshufb_dpb(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_u64x16_csa3_c(uint8_t const *a, uint8_t const *b);
-float jaccard_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b);
-void jaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b1024_vpshufb_dpb(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_u64x16_csa3_c(uint8_t const *a, uint8_t const *b);
+inline float jaccard_u64x16_csa15_cpp(uint8_t const *a, uint8_t const *b);
+inline void jaccard_b1024_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b1024_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
 
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
+inline float jaccard_b1024_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1024_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
-void jaccard_b1024_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const *second_popcounts);
-void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
-void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline float jaccard_b1024_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
+inline void jaccard_b1024_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline void jaccard_b1024_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
+inline void jaccard_b1024_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
 
 //
 // 1536 region
 //
-float jaccard_u64x24_c(uint8_t const *a, uint8_t const *b);
+inline float jaccard_u64x24_c(uint8_t const *a, uint8_t const *b);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1536_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b1536_vpopcntq(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
-float jaccard_b1536_vpopcntq_3csa(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b1536_vpopcntq_3csa(uint8_t const *first_vector, uint8_t const *second_vector);
 
 std::vector<KNNCandidate> jaccard_standalone(
     JaccardKernel kernel,
