@@ -298,11 +298,11 @@ def get_warmup_repetition_n(
 ) -> int:
     if n_vectors <= 1024:
         return 1000
-    elif n_vectors <= 16384:
+    elif n_vectors <= 131072:
         return 100
-    elif n_vectors <= 524288:
+    elif n_vectors <= 1048576:
         return 10
-    return 3
+    return 2
 
 
 def bench_standalone(

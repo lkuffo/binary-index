@@ -6,7 +6,7 @@ echo "Compiling..."
 clang++ -O3 -march=native -DNDEBUG -std=c++20 -shared -o ./include/avx512_hamming.dylib ./include/avx512_hamming.cpp
 
 echo "Running Hamming benchmarks..."
-n_vectors=(256 512 1024 2048 4096 8192 16384 32768 65536 131072 262144 524288 1048576 4194304 16777216)
+n_vectors=(256 512 1024 2048 4096 8192 16384 32768 65536 131072 262144 524288 1048576 4194304) # 16777216)
 n_queries=(1 10 100 1000)
 dimensions=(128 256 512 1024)
 

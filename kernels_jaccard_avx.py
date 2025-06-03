@@ -421,7 +421,7 @@ def get_warmup_repetition_n(
         return 100
     elif n_vectors <= 1048576:
         return 10
-    return 3
+    return 2
 
 def bench_standalone(
         vectors: np.ndarray,

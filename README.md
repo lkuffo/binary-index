@@ -1,5 +1,9 @@
 # Jaccard Index Optimization
 
+This fork tries different things to optimize Jaccard / Hamming indexes. Check [this readme](README_LK.md).
+
+-----
+
 Jaccard Index is one of the most common tools in Information Retrieval and is used to measure the similarity between two sets, mostly defined at a single bit level:
 
 $$
