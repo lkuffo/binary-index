@@ -2409,7 +2409,7 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
                 jaccard_b1024_vpopcntq_vpshufb_pdx(query, data);
             }
 
-            // TODO: Ugly
+            // TODO: Ugly (could be a bottleneck on PDX kernels)
             for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
                 all_distances[global_offset].index = global_offset;
                 all_distances[global_offset].distance = distances_tmp[z];
