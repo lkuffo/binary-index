@@ -99,7 +99,7 @@ Unfortunately, this does not surpass the efficiency of the `VPOPCNTQ` kernels. W
 - Access to the LUTs is non-uniform and unpredictable. The latter also prevents efficient prefetching. 
 
 ### 8 LUTs instead of 16
-Let us define `LUT[i]` as the 16-byte LUT resulting from `XOR+POPCOUNT` the `i`th nibble with all the other nibbles. However, one does not need to explicitly store the 16 LUTs. For instance, `LUT[8]` to `LUT[15]` can be computed as: 
+Let us define `LUT[i]` as the 16-byte LUT resulting from `XOR+POPCOUNT` the `i`th nibble with all the other nibbles. Interestingly, one does not need to explicitly store the 16 LUTs. For instance, `LUT[8]` to `LUT[15]` can be computed from `LUT[0]` to `LUT[7]` by doing the following: 
 ```py
 LUT[8] = 4 - LUT[7]
 LUT[9] = 4 - LUT[6]
@@ -111,7 +111,7 @@ Therefore, we can reduce the size of our global LUT to 128 bytes at the expense 
 It is pending to try this idea on the Jaccard kernel. For this, we would need to find similar properties for the `AND+POPCOUNT` LUTs and also for the `OR+POPCOUNT` LUTs if the popcounts are not precomputed.
 
 ### 4 LUTs instead of 16
-Theoretically, one can reconstruct any of the 16 `XOR+POPCOUNT` LUTs from only 4 LUTs (64 bytes): `LUT[0]`, `LUT[1]`, `LUT[2]` and `LUT[4]` (nibbles `0000`, `0001`, `0010`, `0100`). Then: 
+Theoretically, one can reconstruct any of the 16 `XOR+POPCOUNT` LUTs from only 4 LUTs: `LUT[0]`, `LUT[1]`, `LUT[2]` and `LUT[4]` (nibbles `0000`, `0001`, `0010`, `0100`). Then: 
 ```py
 # nibble 15 14 13 12 11 10  9  8  7  6  5  4  3  2  1  0
 LUT[0] = [4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0]
@@ -162,8 +162,8 @@ The latter did not improve the 256d kernels efficiency. Probably 1KB is too big.
 
 ## Other ideas
 - Transposing the vector collection comes with data management challenges (updates/deletes become harder). Are the gains worth it? Probably yes, in static and medium collections. But what if we transpose the incoming queries? 
-- We are using a transposed block size of 256 to not saturate the registers. What if we push it to 1024? That would require 16 registers per accumulator (16 for UNION and 16 for INTERSECTION). But, whatever we do to access the JUTs will then be amortized by 4x more distance calculations. 
-- Is there a way to use JUTs in the traditional kernels? 
+- We are using a transposed block size of 256 to not saturate the registers. What if we push it to 1024? That would require 16 registers per accumulator (16 for UNION and 16 for INTERSECTION). But, whatever we do to access the JUTs will then be amortized by 4x more distance calculations. If we precompute the popcounts, we could push the INTERSECTION accumulator to 24 registers (1536 vectors processed in the inner loop), or even 32 (2048 vectors). 
+- Is there a way to use JUTs in the traditional 1-to-1 kernels? 
 - Pruning: Hamming is a monotonically increasing metric. Depending on the data distribution, one could break-off computation at an earlier dimension and discard these vectors that are not able to make it into the KNN-heap of a query. An `if` conditional within the distance calculation kernel would be detrimental to performance. Not so much in the kernels that operate in the column-major layout. The latter would help us with our main bottleneck on big collections: data-access. Nevertheless, this is perhaps out of the scope of this project ;)
 
 ## Additional lectures
