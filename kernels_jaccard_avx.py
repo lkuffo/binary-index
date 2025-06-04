@@ -184,6 +184,7 @@ enum JaccardKernel {
     JACCARD_B512_VPSHUFB_SAD_PRECOMPUTED,
     JACCARD_B512_VPOPCNTQ, 
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED, 
+    JACCARD_B512_VPOPCNTQ_VPSHUFB, 
     JACCARD_B512_VPOPCNTQ_PDX, 
     JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX,
     // JACCARD_B512_VPSHUFB_PDX, // TODO, but not important
@@ -250,6 +251,7 @@ inline float jaccard_b512_vpopcntq(uint8_t const *first_vector, uint8_t const *s
 inline float jaccard_b512_vpopcntq_precomputed(uint8_t const *first_vector, uint8_t const *second_vector,uint32_t const popcount_first, uint32_t const popcount_second);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 inline float jaccard_b512_vpshufb_sad(uint8_t const *first_vector, uint8_t const *second_vector);
+inline float jaccard_b512_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t const *second_vector);
 __attribute__((target("avx512f,avx512vl,bmi2,avx512bw,avx512dq")))
 inline float jaccard_b512_vpshufb_sad_precomputed(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const second_popcount);
 inline void jaccard_b512_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
@@ -663,6 +665,11 @@ def main(
             "JACCARD_B512_VPOPCNTQ",
             cppyy.gbl.jaccard_b512_vpopcntq,
             cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ
+        ),
+        (
+            "JACCARD_B512_VPOPCNTQ_VPSHUFB",
+            cppyy.gbl.jaccard_b512_vpopcntq_vpshufb,
+            cppyy.gbl.JaccardKernel.JACCARD_B512_VPOPCNTQ_VPSHUFB
         ),
         (
             "JACCARD_B512_VPOPCNTQ_PRECOMPUTED",
