@@ -12,12 +12,12 @@ The code was changed to bypass USearch and always use a standalone implementatio
 In Sapphire Rapids, both `VPOPCNTQ` and `VPSHUFB` are dispatched through port 5. However, in Zen4, port 0 is exclusive to `VPOPCNTQ`, and port 2 is exclusive to `VPSHUFB`, with both sharing port 1. Therefore, we implemented a LUT-based kernel that uses `VPSHUFB` for INTERSECTION and `VPOPCNTQ` for UNION.
 
 ```sh
-# Zen 4
+# Zen 4 (hybrid kernel marked with ***)
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 438.16
 - Elapsed (ms): 4901.1959
 Profiling `JACCARD_B1024_VPOPCNTQ_VPSHUFB` over 1048576 vectors and 1000 queries of 1024d
-- BOP/S: 268.52
+- BOP/S: 268.52 ***
 - Elapsed (ms): 7997.3436
 Profiling `JACCARD_B1024_VPSHUFB_SAD` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 223.92
@@ -27,7 +27,7 @@ Profiling `JACCARD_B1024_VPOPCNTQ` over 1024 vectors and 1000 queries of 1024d
 - BOP/S: 383.04
 - Elapsed (ms): 5.475
 Profiling `JACCARD_B1024_VPOPCNTQ_VPSHUFB` over 1024 vectors and 1000 queries of 1024d
-- BOP/S: 233.8
+- BOP/S: 233.8 ***
 - Elapsed (ms): 8.9697
 Profiling `JACCARD_B1024_VPSHUFB_SAD` over 1024 vectors and 1000 queries of 1024d
 - BOP/S: 198.35
@@ -35,12 +35,12 @@ Profiling `JACCARD_B1024_VPSHUFB_SAD` over 1024 vectors and 1000 queries of 1024
 ```
 
 ```sh
-# Sapphire Rapids
+# Sapphire Rapids (hybrid kernel marked with ***)
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 182.6
 - Elapsed (ms): 11760.7875
 Profiling `JACCARD_B1024_VPOPCNTQ_VPSHUFB` over 1048576 vectors and 1000 queries of 1024d
-- BOP/S: 163.68
+- BOP/S: 163.68 ***
 - Elapsed (ms): 13120.1021
 Profiling `JACCARD_B1024_VPSHUFB_SAD` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 153.33
@@ -64,20 +64,20 @@ The tradeoff is 1 POPCOUNT for every query vector, which is amortized by all the
 **One can get up to 50% performance improvement**, depending on whether the data fits in cache. 
 
 ```sh
-# Zen 4
+# Zen 4 (kernel with precomputed popcounts marked with ***)
 # 1024d
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1024 vectors and 1000 queries of 1024d
 - BOP/S: 383.04
 - Elapsed (ms): 5.475
 Profiling `JACCARD_B1024_VPOPCNTQ_PRECOMPUTED` over 1024 vectors and 1000 queries of 1024d
-- BOP/S: 500.92
+- BOP/S: 500.92 ***
 - Elapsed (ms): 4.1866
 
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 438.16
 - Elapsed (ms): 4901.1959
 Profiling `JACCARD_B1024_VPOPCNTQ_PRECOMPUTED` over 1048576 vectors and 1000 queries of 1024d
-- BOP/S: 433.15
+- BOP/S: 433.15 ***
 - Elapsed (ms): 4957.8258
 
 # 512d
@@ -85,25 +85,25 @@ Profiling `JACCARD_B512_VPOPCNTQ` over 1048576 vectors and 1000 queries of 512d
 - BOP/S: 297.06
 - Elapsed (ms): 3614.5316
 Profiling `JACCARD_B512_VPOPCNTQ_PRECOMPUTED` over 1048576 vectors and 1000 queries of 512d
-- BOP/S: 335.33
+- BOP/S: 335.33 ***
 - Elapsed (ms): 3202.0707
 ```
 
 ```sh
-# Sapphire Rapids
+# Sapphire Rapids (kernel with precomputed popcounts marked with ***)
 # 1024d
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1024 vectors and 1000 queries of 1024d
 - BOP/S: 365.18
 - Elapsed (ms): 5.7428
 Profiling `JACCARD_B1024_VPOPCNTQ_PRECOMPUTED` over 1024 vectors and 1000 queries of 1024d
-- BOP/S: 487.58
+- BOP/S: 487.58 ***
 - Elapsed (ms): 4.3012
 
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 182.6
 - Elapsed (ms): 11760.7875
 Profiling `JACCARD_B1024_VPOPCNTQ_PRECOMPUTED` over 1048576 vectors and 1000 queries of 1024d
-- BOP/S: 222.22
+- BOP/S: 222.22 ***
 - Elapsed (ms): 9663.9672
 
 #512d
@@ -111,7 +111,7 @@ Profiling `JACCARD_B512_VPOPCNTQ` over 524288 vectors and 1000 queries of 512d
 - BOP/S: 253.27
 - Elapsed (ms): 2119.7363
 Profiling `JACCARD_B512_VPOPCNTQ_PRECOMPUTED` over 524288 vectors and 1000 queries of 512d
-- BOP/S: 329.51
+- BOP/S: 329.51 ***
 - Elapsed (ms): 1629.2936
 ```
 
@@ -167,27 +167,27 @@ void jaccard_b256_vpopcntq_pdx(
 **This kernels deliver interesting performance improvements** over their non-transposed counterpart when data does not spill to main memory. In the following benchmarks the suffix `_PDX` represents the kernels in the column-major layout.
 
 ```sh
-# Zen 4
+# Zen 4 (column-major kernel marked with ***)
 # 1024d
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1024 vectors and 1000 queries of 1024d
 - BOP/S: 383.04
 - Elapsed (ms): 5.475
 Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 1024 vectors and 1000 queries of 1024d
-- BOP/S: 524.38
+- BOP/S: 524.38 ***
 - Elapsed (ms): 3.9993
 
 Profiling `JACCARD_B1024_VPOPCNTQ` over 65536 vectors and 1000 queries of 1024d
 - BOP/S: 502.9
 - Elapsed (ms): 266.8891
 Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 65536 vectors and 1000 queries of 1024d
-- BOP/S: 756.64
+- BOP/S: 756.64 ***
 - Elapsed (ms): 177.3861
 
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 438.16
 - Elapsed (ms): 4901.1959
 Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 1048576 vectors and 1000 queries of 1024d
-- BOP/S: 420.87
+- BOP/S: 420.87 ***
 - Elapsed (ms): 5102.5275
 
 # 256d
@@ -198,32 +198,32 @@ Profiling `JACCARD_B256_VPOPCNTQ` over 131072 vectors and 1000 queries of 256d
 - BOP/S: 219.38
 - Elapsed (ms): 305.8999
 Profiling `JACCARD_B256_VPOPCNTQ_PDX` over 131072 vectors and 1000 queries of 256d
-- BOP/S: 422.37
+- BOP/S: 422.37 ***
 - Elapsed (ms): 158.8864
 ```
 
 ```sh
-# Sapphire Rapids
+# Sapphire Rapids (column-major kernel marked with ***)
 # 1024d
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1024 vectors and 1000 queries of 1024d
 - BOP/S: 365.18
 - Elapsed (ms): 5.7428
 Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 1024 vectors and 1000 queries of 1024d
-- BOP/S: 486.36
+- BOP/S: 486.36 ***
 - Elapsed (ms): 4.3119
 
 Profiling `JACCARD_B1024_VPOPCNTQ` over 65536 vectors and 1000 queries of 1024d
 - BOP/S: 393.35
 - Elapsed (ms): 341.2187
 Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 65536 vectors and 1000 queries of 1024d
-- BOP/S: 425.77
+- BOP/S: 425.77 ***
 - Elapsed (ms): 315.238
 
 Profiling `JACCARD_B1024_VPOPCNTQ` over 1048576 vectors and 1000 queries of 1024d
 - BOP/S: 182.6
 - Elapsed (ms): 11760.7875
 Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 1048576 vectors and 1000 queries of 1024d
-- BOP/S: 197.23
+- BOP/S: 197.23 ***
 - Elapsed (ms): 10888.1483
 
 # 256d
@@ -234,7 +234,7 @@ Profiling `JACCARD_B256_VPOPCNTQ` over 131072 vectors and 1000 queries of 256d
 - BOP/S: 169.5
 - Elapsed (ms): 395.9201
 Profiling `JACCARD_B256_VPOPCNTQ_PDX` over 131072 vectors and 1000 queries of 256d
-- BOP/S: 314.36
+- BOP/S: 314.36 ***
 - Elapsed (ms): 213.4752
 ```
 
@@ -256,7 +256,7 @@ Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 4096 vectors and 1000 queries of 102
 - BOP/S: 688.14
 - Elapsed (ms): 12.1902
 Profiling `JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX` over 4096 vectors and 1000 queries of 1024d
-- BOP/S: 838.34
+- BOP/S: 838.34 ***
 - Elapsed (ms): 10.0063
 
 # Sapphire Rapids
@@ -270,7 +270,7 @@ Profiling `JACCARD_B1024_VPOPCNTQ_PDX` over 4096 vectors and 1000 queries of 102
 - BOP/S: 641.6
 - Elapsed (ms): 13.0746
 Profiling `JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX` over 4096 vectors and 1000 queries of 1024d
-- BOP/S: 790.62
+- BOP/S: 790.62 ***
 - Elapsed (ms): 10.6101
 ```
 
@@ -292,20 +292,20 @@ This results in 16 lookup tables (one for every nibble). Each lookup table with 
 Unfortunately, this does not surpass the efficiency of the `VPOPCNTQ` kernels. 
 
 ```sh
-# Zen 4
+# Zen 4 (JUTs kernel marked with ***)
 Profiling `JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX` over 4096 vectors and 1000 queries of 512d
 - BOP/S: 592.19
 - Elapsed (ms): 7.0827
 Profiling `JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX` over 4096 vectors and 1000 queries of 512d
-- BOP/S: 519.13
+- BOP/S: 519.13 ***
 - Elapsed (ms): 8.0794
 
-# Sapphire Rapids
+# Sapphire Rapids (JUTs kernel marked with ***)
 Profiling `JACCARD_B512_VPOPCNTQ_PRECOMPUTED_PDX` over 4096 vectors and 1000 queries of 512d
 - BOP/S: 558.09
 - Elapsed (ms): 7.5155
 Profiling `JACCARD_B512_VPSHUFB_PRECOMPUTED_PDX` over 4096 vectors and 1000 queries of 512d
-- BOP/S: 494.18
+- BOP/S: 494.18 ***
 - Elapsed (ms): 8.4874
 ```
 
