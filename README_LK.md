@@ -274,7 +274,7 @@ Profiling `JACCARD_B1024_VPOPCNTQ_PRECOMPUTED_PDX` over 4096 vectors and 1000 qu
 - Elapsed (ms): 10.6101
 ```
 
-The degradation when data spills to main memory could be due to the last ugly part of the kernel that moves the distances from SIMD to main memory. Outside of the kernel there is another movement of these 256 distances to another container where the `partial_sort` is performed at the end of the search.
+The degradation when data spills to main memory could be due to the last ugly part of the kernel that moves the distances from SIMD to main memory. Outside of the kernel there is another movement of these 256 distances to another container where the `partial_sort` is performed at the end of the search. It is pending to try to optimize this part.
 
 
 Transposing the vector collection comes with a data management overhead. It is yet to be seen if it is possible to use it on HNSW indexes search.
@@ -342,7 +342,7 @@ LUT[9] = 4 - LUT[6]
 ...
 LUT[15] = 4 - LUT[0]
 ```
-Therefore, we can reduce the size of our global LUT to 128 bytes at the expense of an additional `ADD` in the outer loop of our kernels. Unfortunately, this was not enough to get substantial gains in the Hamming kernel. Although, I believe I did not optimize this code enough. 
+Therefore, we can reduce the size of our global LUT to 128 bytes at the expense of an additional `ADD` in the outer loop of our kernels. Unfortunately, this was not enough to get any gains in the Hamming kernel. 
 
 It is pending to try this idea on the Jaccard kernel. For this, we would need to find similar properties for the `AND+POPCOUNT` LUTs and also for the `OR+POPCOUNT` LUTs if the popcounts are not precomputed.
 
