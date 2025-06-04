@@ -891,7 +891,7 @@ inline float jaccard_b512_vpopcntq_vpshufb(uint8_t const *first_vector, uint8_t 
 
     __m512i union_start_popcount = _mm512_popcnt_epi64(_mm512_or_epi64(first_start, second_start));
 
-    __m512i intersection_counts = _mm512_sad_epu8(intersection_start_popcount, _mm256_setzero_si256());
+    __m512i intersection_counts = _mm512_sad_epu8(intersection_start_popcount, _mm512_setzero_si256());
 
     return 1.f - (_mm512_reduce_add_epi64(intersection_counts) + 1.f) / (_mm512_reduce_add_epi64(union_start_popcount) + 1.f);
 }
