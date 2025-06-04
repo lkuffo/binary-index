@@ -417,7 +417,9 @@ def bench_kernel(
 def get_warmup_repetition_n(
         n_vectors: int
 ) -> int:
-    if n_vectors <= 1024:
+    if n_vectors < 256:
+        return 10000
+    elif n_vectors <= 1024:
         return 1000
     elif n_vectors <= 131072:
         return 100
