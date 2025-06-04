@@ -123,10 +123,13 @@ In the `VPOPCNTQ` kernel, this eliminates the `_mm256_reduce_add_epi64` step. In
 
 The transposition is done in blocks of 256 vectors to avoid intermediate LOAD/STORE instructions of the accumulated distances. 
 
-A kernel on this layout looks like this:
+A kernel on this layout process 256 vectors at a time, and looks like this:
 
 ```cpp
-void jaccard_b256_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
+void jaccard_b256_vpopcntq_pdx(
+    uint8_t const *first_vector,   # query vector
+    uint8_t const *second_vector   # 256x256 transposed vector collection 
+) {
     // Init accumulators that fit 256 uint8_t values
     __m512i intersections_result[4];
     __m512i unions_result[4];
