@@ -127,8 +127,8 @@ A kernel on this layout process 256 vectors at a time, and looks like this:
 
 ```cpp
 void jaccard_b256_vpopcntq_pdx(
-    uint8_t const *first_vector,   # query vector
-    uint8_t const *second_vector   # 256x256 transposed vector collection 
+    uint8_t const *first_vector,   // query vector
+    uint8_t const *second_vector   // 256x256 transposed vector collection 
 ) {
     // Init accumulators that fit 256 uint8_t values
     __m512i intersections_result[4];
