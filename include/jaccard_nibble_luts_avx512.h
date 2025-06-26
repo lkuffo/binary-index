@@ -438,6 +438,13 @@ __m512i transf3 = _mm512_set_epi8(
     -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2, -2,  0,  0, +2
 );
 
+__m512i m512_base_lut = _mm512_set_epi8(
+    1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, // Nibble: 1
+    1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, // 2
+    1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, // 4
+    1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0  // 8
+)
+
 
 alignas(64) static const __m512i m512_intersection_lookup_tables[16] = {
     m512_intersection_lut_0, m512_intersection_lut_1, m512_intersection_lut_2, m512_intersection_lut_3,
