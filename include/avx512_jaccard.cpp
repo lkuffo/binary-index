@@ -511,6 +511,9 @@ inline void jaccard_b256_jut64_precomputed_pdx(
         intersections_result[i] = _mm512_set1_epi8(0);
     }
     for (size_t dim = 0; dim != 32; dim++){
+        if (first_vector[dim] == 0){
+            continue;
+        }
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
         uint8_t first_low = first_vector[dim] & 0x0F;
 
