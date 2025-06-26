@@ -534,8 +534,8 @@ inline void jaccard_b256_jut64_precomputed_pdx(
 //        }
         __m512i first = _mm512_set1_epi8(first_vector[dim]);
 
-        __m512i first_low = _mm512_and_si512(first, low_mask);
-        __m512i first_high = _mm512_and_si512(_mm512_srli_epi16(first, 4), low_mask);
+        //__m512i first_low = _mm512_and_si512(first, low_mask);
+        //__m512i first_high = _mm512_and_si512(_mm512_srli_epi16(first, 4), low_mask);
 
         // Choose lookup tables
         // uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
@@ -563,7 +563,7 @@ inline void jaccard_b256_jut64_precomputed_pdx(
             __m512i second = _mm512_loadu_epi8(second_vector);
 
             // Getting nibbles from data
-            __m512i second_low = _mm512_and_si512(second, first_low);
+            __m512i second_low = _mm512_and_si512(second, first);
             //__m512i second_high = _mm512_and_si512(_mm512_srli_epi16(second, 4), first_high);
 
             intersections_result[i] = _mm512_add_epi8(intersections_result[i], _mm512_shuffle_epi8(lookup, second_low));
