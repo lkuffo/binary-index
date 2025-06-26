@@ -526,13 +526,13 @@ inline void jaccard_b256_jut64_precomputed_pdx(
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-    //__m512i first = _mm512_loadu_epi8(first_vector);
+    const __m512i first = _mm512_loadu_epi8(first_vector);
     for (size_t dim = 0; dim != 32; dim++){
 //        if (first_vector[dim] == 0){
 //            second_vector += 1536;
 //            continue;
 //        }
-        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+        //__m512i first = _mm512_set1_epi8(first_vector[dim]);
 
         //__m512i first_low = _mm512_and_si512(first, low_mask);
         //__m512i first_high = _mm512_and_si512(_mm512_srli_epi16(first, 4), low_mask);
