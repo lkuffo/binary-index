@@ -560,7 +560,7 @@ inline void jaccard_b256_jut64_precomputed_pdx(
 //        }
 
         for (size_t i = 0; i < 24; i++){ // 1536 uint8_t values
-            __m512i second = _mm512_loadu_epi8(second_vector);
+            __m512i second = _mm512_and_si512(first, _mm512_loadu_epi8(second_vector));
 
             // Getting nibbles from data
             __m512i second_low = _mm512_and_si512(second, low_mask);
