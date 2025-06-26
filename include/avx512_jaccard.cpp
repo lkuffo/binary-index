@@ -512,6 +512,7 @@ inline void jaccard_b256_jut64_precomputed_pdx(
     }
     for (size_t dim = 0; dim != 32; dim++){
         if (first_vector[dim] == 0){
+            second_vector += 1536;
             continue;
         }
         uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
