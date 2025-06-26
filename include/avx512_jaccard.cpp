@@ -519,8 +519,8 @@ inline void jaccard_b256_jut64_precomputed_pdx(
         intersections_result[i] = _mm512_set1_epi8(0);
     }
     __m512i base_lut = m512_base_lut;
-    __m512i lut_intersection_high;
-    __m512i lut_intersection_low;
+    __m512i lut_intersection_high = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0));
+    __m512i lut_intersection_low = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0));
     for (size_t dim = 0; dim != 32; dim++){
         if (first_vector[dim] == 0){
             second_vector += 1536;
@@ -531,23 +531,23 @@ inline void jaccard_b256_jut64_precomputed_pdx(
 
         // Choose lookup tables
         // HIGH
-        switch (first_high){
-            case 0:
-                lut_intersection_high = _mm512_setzero_si512(); break;
-            case 1:
-                lut_intersection_high = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0)); break;
-            default:
-                lut_intersection_high = _mm512_setzero_si512(); break;
-        }
-        // LOW
-        switch (first_low){
-            case 0:
-                lut_intersection_low = _mm512_setzero_si512(); break;
-            case 1:
-                lut_intersection_low = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0)); break;
-            default:
-                lut_intersection_low = _mm512_setzero_si512(); break;
-        }
+//        switch (first_high){
+//            case 0:
+//                lut_intersection_high = _mm512_setzero_si512(); break;
+//            case 1:
+//                lut_intersection_high = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0)); break;
+//            default:
+//                lut_intersection_high = _mm512_setzero_si512(); break;
+//        }
+//        // LOW
+//        switch (first_low){
+//            case 0:
+//                lut_intersection_low = _mm512_setzero_si512(); break;
+//            case 1:
+//                lut_intersection_low = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0)); break;
+//            default:
+//                lut_intersection_low = _mm512_setzero_si512(); break;
+//        }
 
 
         for (size_t i = 0; i < 24; i++){ // 1536 uint8_t values
