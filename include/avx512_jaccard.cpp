@@ -519,11 +519,8 @@ inline void jaccard_b256_jut64_precomputed_pdx(
         uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
-        // If I always use the same lookup tables performance goes up by 60% when data fits in L1
-        // and by <5% when data doesn't fit in L1
-        // 512 bytes is too high for the lookup table to be efficient
-        __m512i lut_intersection_high = m512_intersection_lookup_tables[first_high];
-        __m512i lut_intersection_low = m512_intersection_lookup_tables[first_low];
+        __m512i lut_intersection_high = m512_intersection_lookup_tables[0];
+        __m512i lut_intersection_low = m512_intersection_lookup_tables[0];
 
         for (size_t i = 0; i < 24; i++){ // 1536 uint8_t values
             __m512i second = _mm512_loadu_epi8(second_vector);
