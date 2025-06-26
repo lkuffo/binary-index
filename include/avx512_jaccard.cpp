@@ -526,13 +526,13 @@ inline void jaccard_b256_jut64_precomputed_pdx(
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
         4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
-    __m512i first = _mm512_loadu_epi8(first_vector);
+    //__m512i first = _mm512_loadu_epi8(first_vector);
     for (size_t dim = 0; dim != 32; dim++){
 //        if (first_vector[dim] == 0){
 //            second_vector += 1536;
 //            continue;
 //        }
-        //__m512i first = _mm512_set1_epi8(first_vector[dim]);
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
 
         //__m512i first_low = _mm512_and_si512(first, low_mask);
         //__m512i first_high = _mm512_and_si512(_mm512_srli_epi16(first, 4), low_mask);
@@ -560,7 +560,7 @@ inline void jaccard_b256_jut64_precomputed_pdx(
 //        }
 
         for (size_t i = 0; i < 24; i++){ // 1536 uint8_t values
-            __m512i second = _mm512_and_si512(low_mask, _mm512_loadu_epi8(second_vector));
+            __m512i second = _mm512_and_si512(first, _mm512_loadu_epi8(second_vector));
 
             // Getting nibbles from data
             __m512i second_low = _mm512_and_si512(second, low_mask);
