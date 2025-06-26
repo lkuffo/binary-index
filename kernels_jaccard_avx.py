@@ -178,6 +178,7 @@ enum JaccardKernel {
     JACCARD_B256_VPSHUFB_PDX,
     JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX,
     JACCARD_B256_VPOPCNTQ_VPSHUFB_PDX,
+    JACCARD_B256_JUT64_PRECOMPUTED_PDX,
     // 512
     JACCARD_U64X8_C,
     JACCARD_B512_VPSHUFB_SAD,
@@ -242,6 +243,7 @@ inline void jaccard_b256_vpshufb_pdx(uint8_t const *first_vector, uint8_t const 
 inline void jaccard_b256_vpopcntq_vpshufb_pdx(uint8_t const *first_vector, uint8_t const *second_vector);
 inline void jaccard_b256_vpopcntq_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 inline void jaccard_b256_vpshufb_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
+inline void jaccard_b256_jut64_precomputed_pdx(uint8_t const *first_vector, uint8_t const *second_vector, uint32_t const first_popcount, uint32_t const *second_popcounts);
 
 //
 // 512 region
@@ -837,6 +839,11 @@ def main(
             "JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX",
             cppyy.gbl.jaccard_b256_vpshufb_precomputed_pdx,
             cppyy.gbl.JaccardKernel.JACCARD_B256_VPSHUFB_PRECOMPUTED_PDX
+        ),
+        (
+            "JACCARD_B256_JUT64_PRECOMPUTED_PDX",
+            cppyy.gbl.jaccard_b256_jut64_precomputed_pdx,
+            cppyy.gbl.JaccardKernel.JACCARD_B256_JUT64_PRECOMPUTED_PDX
         )
     ]
     standalone_kernels_cpp_pdx_512d = [
@@ -967,11 +974,19 @@ def main(
                 print(f"- Recall@1: {stats['recalled_top_match'] / query_count:.2%}")
 
         if len(vectors) % 256 == 0:
-            vectors_pdx = row_major_to_pdx(vectors, 256)
+            vectors_pdx_256 = row_major_to_pdx(vectors, 256)
+            vectors_pdx_1536 = row_major_to_pdx(vectors, 1536)
             for name, _, kernel_id in kernels_cpp_pdx:
                 benchmark_metadata['kernel_name'] = name
                 print(f"Profiling `{name}` in standalone c++ with the PDX layout over {count:,} vectors and {query_count} queries")
-                stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx, queries=queries, k=k, kernel=kernel_id, query_count=query_count, kernel_name=name, data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
+                if "_JUT" in name:
+                    stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx_1536, queries=queries, k=k,
+                                                 kernel=kernel_id, query_count=query_count, kernel_name=name,
+                                                 data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
+                else:
+                    stats = bench_standalone_pdx(vectors=vectors, vectors_pdx=vectors_pdx_256, queries=queries, k=k,
+                                                 kernel=kernel_id, query_count=query_count, kernel_name=name,
+                                                 data_popcounts=data_popcounts, warmup_repetition=warmup_repetition)
                 if len(output): save_results(stats, benchmark_metadata, output)
                 else:
                     print(f"- BOP/S: {stats['bit_ops_per_s'] / 1e9:,.2f} G")
