@@ -505,12 +505,12 @@ inline void jaccard_b256_jut64_precomputed_pdx(
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
 
-    __m512i m512_base_lut = _mm512_set_epi8(
-        1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, // Nibble: 1
-        1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, // 2
-        1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, // 4
-        1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0  // 8
-    );
+//    __m512i m512_base_lut = _mm512_set_epi8(
+//        1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, // Nibble: 1
+//        1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, // 2
+//        1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, // 4
+//        1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0  // 8
+//    );
 
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i intersections_result[24];
@@ -518,15 +518,23 @@ inline void jaccard_b256_jut64_precomputed_pdx(
     for (size_t i = 0; i < 24; ++i) { // 1536 vectors at a time (using 8 registers)
         intersections_result[i] = _mm512_set1_epi8(0);
     }
-    __m512i lut_intersection_high = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(m512_base_lut, 0));
-    __m512i lut_intersection_low = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(m512_base_lut, 0));
+//    __m512i lut_intersection_high = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(m512_base_lut, 0));
+//    __m512i lut_intersection_low = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(m512_base_lut, 0));
+//
+    __m512i lookup = _mm512_set_epi8(
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0,
+        4, 3, 3, 2, 3, 2, 2, 1, 3, 2, 2, 1, 2, 1, 1, 0);
+
     for (size_t dim = 0; dim != 32; dim++){
         if (first_vector[dim] == 0){
             second_vector += 1536;
             continue;
         }
-        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
-        uint8_t first_low = first_vector[dim] & 0x0F;
+        __m512i first = _mm512_set1_epi8(first_vector[dim]);
+//        uint8_t first_high = (first_vector[dim] & 0xF0) >> 4;
+//        uint8_t first_low = first_vector[dim] & 0x0F;
 
         // Choose lookup tables
         // HIGH
@@ -548,17 +556,18 @@ inline void jaccard_b256_jut64_precomputed_pdx(
 //                lut_intersection_low = _mm512_setzero_si512(); break;
 //        }
 
-
         for (size_t i = 0; i < 24; i++){ // 1536 uint8_t values
             __m512i second = _mm512_loadu_epi8(second_vector);
 
+            __m256i intersection_ = _mm256_and_epi64(first, second);
+
             // Getting nibbles from data
-            __m512i second_low = _mm512_and_si512(second, low_mask);
-            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(second, 4), low_mask);
+            __m512i second_low = _mm512_and_si512(intersection_, low_mask);
+            __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(intersection_, 4), low_mask);
 
             __m512i intersection = _mm512_add_epi8(
-                _mm512_shuffle_epi8(lut_intersection_low, second_low),
-                _mm512_shuffle_epi8(lut_intersection_high, second_high)
+                _mm512_shuffle_epi8(lookup, second_low),
+                _mm512_shuffle_epi8(lookup, second_high)
             );
 
             intersections_result[i] = _mm512_add_epi8(intersections_result[i], intersection);
