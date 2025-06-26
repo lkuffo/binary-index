@@ -566,12 +566,8 @@ inline void jaccard_b256_jut64_precomputed_pdx(
             __m512i second_low = _mm512_and_si512(second, first_low);
             __m512i second_high = _mm512_and_si512(_mm512_srli_epi16(second, 4), first_high);
 
-            __m512i intersection = _mm512_add_epi8(
-                _mm512_shuffle_epi8(lookup, second_low),
-                _mm512_shuffle_epi8(lookup, second_high)
-            );
-
-            intersections_result[i] = _mm512_add_epi8(intersections_result[i], intersection);
+            intersections_result[i] = _mm512_add_epi8(intersections_result[i], _mm512_shuffle_epi8(lookup, second_low));
+            intersections_result[i] = _mm512_add_epi8(intersections_result[i], _mm512_shuffle_epi8(lookup, second_high));
 
             second_vector += 64; // 256x8-bit values (using 8 registers at a time)
         }
