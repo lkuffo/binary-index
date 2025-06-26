@@ -518,9 +518,8 @@ inline void jaccard_b256_jut64_precomputed_pdx(
     for (size_t i = 0; i < 24; ++i) { // 1536 vectors at a time (using 8 registers)
         intersections_result[i] = _mm512_set1_epi8(0);
     }
-    __m512i base_lut = m512_base_lut;
-    __m512i lut_intersection_high = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0));
-    __m512i lut_intersection_low = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(base_lut, 0));
+    __m512i lut_intersection_high = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(m512_base_lut, 0));
+    __m512i lut_intersection_low = _mm512_broadcast_i32x4(_mm512_extracti64x2_epi64(m512_base_lut, 0));
     for (size_t dim = 0; dim != 32; dim++){
         if (first_vector[dim] == 0){
             second_vector += 1536;
