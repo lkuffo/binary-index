@@ -91,6 +91,8 @@ enum JaccardKernel {
 static uint8_t intersections_tmp[256];
 static uint8_t unions_tmp[256];
 static float distances_tmp[256];
+static float distances_tmp_1536[1536];
+static uint8_t intersections_tmp_1536[1536];
 
 inline void jaccard_b128_vpopcntq_pdx(uint8_t const *first_vector, uint8_t const *second_vector) {
     __m512i intersections_result[4];
@@ -538,12 +540,12 @@ inline void jaccard_b256_jut64_precomputed_pdx(
     }
     // TODO: Ugly
     for (size_t i = 0; i < 24; i++) {
-        _mm512_storeu_si512(intersections_tmp + (i * 64), intersections_result[i]);
+        _mm512_storeu_si512(intersections_tmp_1536 + (i * 64), intersections_result[i]);
     }
     for (size_t i = 0; i < 1536; i++){
-        float intersection = (float)intersections_tmp[i];
+        float intersection = (float)intersections_tmp_1536[i];
         float denominator = first_popcount + second_popcounts[i] - intersection;
-        distances_tmp[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
+        distances_tmp_1536[i] = (denominator != 0) ? 1 - intersection / denominator : 1.0f;
     }
 }
 
@@ -2465,7 +2467,11 @@ std::vector<KNNCandidate> jaccard_pdx_standalone_partial_sort(
             // TODO: Ugly (could be a bottleneck on PDX kernels)
             for (uint32_t z = 0; z < PDX_BLOCK_SIZE; ++z) {
                 all_distances[global_offset].index = global_offset;
-                all_distances[global_offset].distance = distances_tmp[z];
+                if constexpr (PDX_BLOCK_SIZE == 256){
+                    all_distances[global_offset].distance = distances_tmp[z];
+                } else if constexpr (PDX_BLOCK_SIZE == 1536) {
+                    all_distances[global_offset].distance = distances_tmp_1536[z];
+                }
                 global_offset++;
             }
             data += N_WORDS * PDX_BLOCK_SIZE;
