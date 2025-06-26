@@ -504,6 +504,14 @@ inline void jaccard_b256_jut64_precomputed_pdx(
     uint8_t const *first_vector, uint8_t const *second_vector,
     uint32_t const first_popcount, uint32_t const *second_popcounts
 ) {
+
+    __m512i m512_base_lut = _mm512_set_epi8(
+        1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, // Nibble: 1
+        1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, // 2
+        1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, // 4
+        1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0  // 8
+    );
+
     __m512i low_mask = _mm512_set1_epi8(0x0f);
     __m512i intersections_result[24];
     // Load initial values
